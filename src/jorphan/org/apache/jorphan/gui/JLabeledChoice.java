@@ -172,6 +172,10 @@ public class JLabeledChoice extends JPanel implements JLabeledField {
 
     }
 
+    public void setChoiceListEnabled(boolean enabled) {
+        choiceList.setEnabled(enabled);
+    }
+
     /**
      * Set the text displayed in the label.
      *
