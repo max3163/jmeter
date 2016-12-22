@@ -241,7 +241,7 @@ public class TableVisualizer extends AbstractVisualizer implements Clearable {
         // Set up the table itself
         table = new JTable(model);
         JMeterUtils.applyHiDPI(table);
-        table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer());
+        HeaderAsPropertyRenderer.install(table);
         // table.getTableHeader().setReorderingAllowed(false);
         RendererUtils.applyRenderers(table, RENDERERS);
 
