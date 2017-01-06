@@ -18,28 +18,37 @@
 
 package org.apache.jmeter.engine;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.swing.JOptionPane;
+
+import org.apache.jmeter.JMeter;
+import org.apache.jmeter.reporters.ResultCollector;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.collections.HashTree;
+import org.apache.jorphan.collections.SearchByClass;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 /**
- * This class serves all responsibility of starting and stopping distributed tests.
- * It was refactored from JMeter and RemoteStart classes to unify retry behavior.
+ * This class serves all responsibility of starting and stopping distributed
+ * tests. It was refactored from JMeter and RemoteStart classes to unify retry
+ * behavior.
  *
  * @see org.apache.jmeter.JMeter
  * @see org.apache.jmeter.gui.action.RemoteStart
@@ -59,7 +68,6 @@ public class DistributedRunner {
     private PrintStream stderr = new PrintStream(new SilentOutputStream());
     private final Map<String, JMeterEngine> engines = new HashMap<>();
 
-
     public DistributedRunner() {
         this(new Properties());
     }
@@ -72,6 +80,50 @@ public class DistributedRunner {
     }
 
     public void init(List<String> addresses, HashTree tree) {
+
+        SearchByClass<ResultCollector> resultListeners = new SearchByClass<>(ResultCollector.class);
+        tree.traverse(resultListeners);
+        Iterator<ResultCollector> irc = resultListeners.getSearchResults().iterator();
+        while (irc.hasNext()) {
+            ResultCollector rc = irc.next();
+            File f = new File(rc.getFilename());
+            if (f.exists()) {
+                String[] option = new String[] { JMeterUtils.getResString("concat_result"),
+                        JMeterUtils.getResString("dont_start"),
+                        JMeterUtils.getResString("replace_file") };
+                String question  = MessageFormat.format(
+                        JMeterUtils.getResString("ask_existing_file") // $NON-NLS-1$
+                        ,  rc.getFilename());
+                int response = JOptionPane.YES_OPTION;
+                if ( !JMeter.isNonGUI() ) {
+                    // Interactive question
+                    response = JOptionPane.showOptionDialog(null,
+                            question,
+                            JMeterUtils.getResString("warning"), 
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.WARNING_MESSAGE,
+                            null,
+                            option,
+                            option[0]);
+                } else {
+                    // non GUI, check from command line paramater
+                    response = JMeter.isDeleteResultFile() ? JOptionPane.CANCEL_OPTION : JOptionPane.YES_OPTION;
+                }
+                switch (response) {
+                    case JOptionPane.NO_OPTION:
+                        // Exit without start the test
+                        return;
+                    case JOptionPane.CANCEL_OPTION:
+                        // replace_file so delete the existing one
+                        f.delete();
+                        break;
+                    case JOptionPane.YES_OPTION:
+                    //  append is the default behaviour, so nothing to do
+                        break;
+                }
+            }
+        }
+
         // converting list into mutable version
         List<String> addrs = new LinkedList<>(addresses);
 
@@ -120,7 +172,9 @@ public class DistributedRunner {
     /**
      * Starts a remote testing engines
      *
-     * @param addresses list of the DNS names or IP addresses of the remote testing engines
+     * @param addresses
+     *            list of the DNS names or IP addresses of the remote testing
+     *            engines
      */
     public void start(List<String> addresses) {
         println("Starting remote engines");
@@ -219,7 +273,8 @@ public class DistributedRunner {
         } catch (Exception ex) {
             log.error("Failed to create engine at " + address, ex);
             JMeterUtils.reportErrorToUser(ex.getMessage(),
-                    JMeterUtils.getResString("remote_error_init") + ": " + address); // $NON-NLS-1$ $NON-NLS-2$
+                    JMeterUtils.getResString("remote_error_init") + ": " + address); // $NON-NLS-1$
+                                                                                     // $NON-NLS-2$
             return null;
         }
     }
@@ -227,13 +282,15 @@ public class DistributedRunner {
     /**
      * A factory method that might be overridden for unit testing
      *
-     * @param address address for engine
+     * @param address
+     *            address for engine
      * @return engine instance
      * @throws RemoteException
      * @throws NotBoundException
      * @throws MalformedURLException
      */
-    protected JMeterEngine createEngine(String address) throws RemoteException, NotBoundException, MalformedURLException {
+    protected JMeterEngine createEngine(String address)
+            throws RemoteException, NotBoundException, MalformedURLException {
         return new ClientJMeterEngine(address);
     }
 

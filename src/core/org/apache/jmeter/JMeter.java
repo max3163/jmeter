@@ -147,6 +147,7 @@ public class JMeter implements JMeterPlugin {
     private static final int REPORT_GENERATING_OPT  = 'g';// $NON-NLS-1$
     private static final int REPORT_AT_END_OPT      = 'e';// $NON-NLS-1$
     private static final int REPORT_OUTPUT_FOLDER_OPT      = 'o';// $NON-NLS-1$
+    private static final int FORCE_DELETE_RESULT_FILE      = 'f';// $NON-NLS-1$
     
     private static final int SYSTEM_PROPERTY    = 'D';// $NON-NLS-1$
     private static final int JMETER_GLOBAL_PROP = 'G';// $NON-NLS-1$
@@ -158,6 +159,8 @@ public class JMeter implements JMeterPlugin {
     private static final int REMOTE_OPT_PARAM   = 'R';// $NON-NLS-1$
     private static final int SYSTEM_PROPFILE    = 'S';// $NON-NLS-1$
     private static final int REMOTE_STOP        = 'X';// $NON-NLS-1$
+    
+    private static boolean deleteResultFile     = false;
 
     /**
      * Define the understood options. Each CLOptionDescriptor contains:
@@ -261,6 +264,10 @@ public class JMeter implements JMeterPlugin {
             new CLOptionDescriptor("reportoutputfolder",
                     CLOptionDescriptor.ARGUMENT_REQUIRED, REPORT_OUTPUT_FOLDER_OPT,
                     "output folder for report dashboard");
+    private static final CLOptionDescriptor D_FORCE_DELETE_RESULT_FILE =
+            new CLOptionDescriptor("forceDeleteResultFile",
+                    CLOptionDescriptor.ARGUMENT_DISALLOWED, FORCE_DELETE_RESULT_FILE,
+                    "force delete existing result file before start the test");
 
     private static final CLOptionDescriptor[] options = new CLOptionDescriptor[] {
             D_OPTIONS_OPT,
@@ -282,6 +289,7 @@ public class JMeter implements JMeterPlugin {
             D_JMETER_GLOBAL_PROP,
             D_SYSTEM_PROPERTY,
             D_SYSTEM_PROPFILE,
+            D_FORCE_DELETE_RESULT_FILE,
             D_LOGLEVEL,
             D_REMOTE_OPT,
             D_REMOTE_OPT_PARAM,
@@ -825,6 +833,9 @@ public class JMeter implements JMeterPlugin {
             case REMOTE_STOP:
                 remoteStop = true;
                 break;
+            case FORCE_DELETE_RESULT_FILE:
+                deleteResultFile = true;
+                break;
             default:
                 // ignored
                 break;
@@ -1256,6 +1267,15 @@ public class JMeter implements JMeterPlugin {
      */
     public static boolean isNonGUI(){
         return "true".equals(System.getProperty(JMeter.JMETER_NON_GUI)); //$NON-NLS-1$
+    }
+    
+    /**
+     * Check if have to delete result file before start 
+     *
+     * @return true if JMeter is running in non-GUI mode.
+     */
+    public static boolean isDeleteResultFile(){
+        return deleteResultFile;
     }
 
     private void logProperty(String prop){
