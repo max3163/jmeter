@@ -19,13 +19,20 @@
 package org.apache.jmeter.gui.action;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
+import java.text.MessageFormat;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.swing.JOptionPane;
 
+import org.apache.jmeter.JMeter;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.reporters.ResultCollector;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.collections.HashTree;
+import org.apache.jorphan.collections.SearchByClass;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
@@ -60,4 +67,54 @@ public abstract class AbstractAction implements Command {
             }
         }
     }
+    
+    
+    protected boolean popupCheckExistinfFileListener(HashTree tree) {
+        
+        SearchByClass<ResultCollector> resultListeners = new SearchByClass<>(ResultCollector.class);
+        tree.traverse(resultListeners);
+        Iterator<ResultCollector> irc = resultListeners.getSearchResults().iterator();
+        while (irc.hasNext()) {
+            ResultCollector rc = irc.next();
+            File f = new File(rc.getFilename());
+            if (f.exists()) {
+                String[] option = new String[] { JMeterUtils.getResString("concat_result"),
+                        JMeterUtils.getResString("dont_start"),
+                        JMeterUtils.getResString("replace_file") };
+                String question  = MessageFormat.format(
+                        JMeterUtils.getResString("ask_existing_file") // $NON-NLS-1$
+                        ,  rc.getFilename());
+                int response = JOptionPane.YES_OPTION;
+                if ( !JMeter.isNonGUI() ) {
+                    // Interactive question
+                    response = JOptionPane.showOptionDialog(null,
+                            question,
+                            JMeterUtils.getResString("warning"), 
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.WARNING_MESSAGE,
+                            null,
+                            option,
+                            option[0]);
+                } else {
+                    // non GUI, check from command line paramater
+                    response = JMeter.isDeleteResultFile() ? JOptionPane.CANCEL_OPTION : JOptionPane.YES_OPTION;
+                }
+                switch (response) {
+                    case JOptionPane.NO_OPTION:
+                        // Exit without start the test
+                        return false;
+                    case JOptionPane.CANCEL_OPTION:
+                        // replace_file so delete the existing one
+                        f.delete();
+                        break;
+                    case JOptionPane.YES_OPTION:
+                    //  append is the default behaviour, so nothing to do
+                        break;
+                }
+            }
+        }
+        return true;
+    }
+    
+    
 }

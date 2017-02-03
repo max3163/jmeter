@@ -185,7 +185,6 @@ public class Start extends AbstractAction {
             AbstractThreadGroup[] threadGroupsToRun) {
         GuiPackage gui = GuiPackage.getInstance();
         HashTree testTree = gui.getTreeModel().getTestPlan();
-        
         JMeter.convertSubTree(testTree);
         if(threadGroupsToRun != null && threadGroupsToRun.length>0) {
             removeThreadGroupsFromHashTree(testTree, threadGroupsToRun);
@@ -203,16 +202,21 @@ public class Start extends AbstractAction {
             TreeCloner cloner = cloneTree(testTree, ignoreTimer);      
             clonedTree = cloner.getClonedTree();
         }
-        engine = new StandardJMeterEngine();
-        engine.configure(clonedTree);
-        try {
-            engine.runTest();
-        } catch (JMeterEngineException e) {
-            JOptionPane.showMessageDialog(gui.getMainFrame(), e.getMessage(), 
-                    JMeterUtils.getResString("error_occurred"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+        if ( popupCheckExistinfFileListener(testTree) ) {
+            engine = new StandardJMeterEngine();
+            engine.configure(clonedTree);
+            try {
+                engine.runTest();
+            } catch (JMeterEngineException e) {
+                JOptionPane.showMessageDialog(gui.getMainFrame(), e.getMessage(), 
+                        JMeterUtils.getResString("error_occurred"), JOptionPane.ERROR_MESSAGE); //$NON-NLS-1$
+            }
+            LOG.debug("test plan after cloning and running test is running version: "
+                    + ((TestPlan) testTree.getArray()[0]).isRunningVersion());
         }
-        LOG.debug("test plan after cloning and running test is running version: "
-                + ((TestPlan) testTree.getArray()[0]).isRunningVersion());
+        else {
+            LOG.debug("User ask to stop the run before it start for checking listener output file ");
+        }
     }
 
     /**
