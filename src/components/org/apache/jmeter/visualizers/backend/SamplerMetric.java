@@ -40,15 +40,15 @@ public class SamplerMetric {
     /**
      * Response times for OK samples
      */
-    private DescriptiveStatistics okResponsesStats = new DescriptiveStatistics();
+    private DescriptiveStatistics okResponsesStats = new DescriptiveStatistics(SLIDING_WINDOW_SIZE);
     /**
      * Response times for KO samples
      */
-    private DescriptiveStatistics koResponsesStats = new DescriptiveStatistics();
+    private DescriptiveStatistics koResponsesStats = new DescriptiveStatistics(SLIDING_WINDOW_SIZE);
     /**
      * Response times for All samples
      */
-    private DescriptiveStatistics allResponsesStats = new DescriptiveStatistics();
+    private DescriptiveStatistics allResponsesStats = new DescriptiveStatistics(SLIDING_WINDOW_SIZE);
     /**
      *  OK, KO, ALL stats if WindowMode is FIXED
      */
@@ -56,7 +56,7 @@ public class SamplerMetric {
     /**
      * Timeboxed percentiles don't makes sense
      */
-    private DescriptiveStatistics pctResponseStats = new DescriptiveStatistics();
+    private DescriptiveStatistics pctResponseStats = new DescriptiveStatistics(SLIDING_WINDOW_SIZE);
     private int successes;
     private int failures;
     private int hits;
@@ -68,10 +68,6 @@ public class SamplerMetric {
         List<DescriptiveStatistics> stats = new ArrayList<>(4);
         stats.add(pctResponseStats);
         stats.addAll(windowedStats);
-        // Limit to sliding window of SLIDING_WINDOW_SIZE values
-        for (DescriptiveStatistics stat : stats) {
-            stat.setWindowSize(SLIDING_WINDOW_SIZE);
-        }
     }
 
     /**
