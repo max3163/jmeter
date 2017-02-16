@@ -18,18 +18,21 @@
 package org.apache.jmeter.protocol.jms.sampler;
 
 import java.util.Date;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -38,9 +41,9 @@ import org.apache.log.Logger;
  */
 public abstract class BaseJMSSampler extends AbstractSampler {
 
-    private static final long serialVersionUID = 240L;
+    private static final long serialVersionUID = 241L;
     
-    private static final Logger LOGGER = LoggingManager.getLoggerForClass(); 
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseJMSSampler.class);
 
     //++ These are JMX file attribute names and must not be changed
     private static final String JNDI_INITIAL_CONTEXT_FAC = "jms.initial_context_factory"; // $NON-NLS-1$
@@ -74,6 +77,10 @@ public abstract class BaseJMSSampler extends AbstractSampler {
     // Is Destination setup static? else dynamic
     private static final String DESTINATION_STATIC = "jms.destination_static"; // $NON-NLS-1$
     private static final boolean DESTINATION_STATIC_DEFAULT = true; // default to maintain compatibility
+
+    /** Property name for regex of error codes which force reconnection **/
+    private static final String ERROR_RECONNECT_ON_CODES = "jms_error_reconnect_on_codes"; // $NON-NLS-1$
+    private transient Predicate<String> isReconnectErrorCode = e -> false;
 
     //-- End of JMX file attribute names
 
@@ -380,5 +387,29 @@ public abstract class BaseJMSSampler extends AbstractSampler {
         }
 
         return response.toString();
+    }
+
+    public String getReconnectionErrorCodes() {
+        return getPropertyAsString(ERROR_RECONNECT_ON_CODES);
+    }
+
+    public void setReconnectionErrorCodes(String reconnectionErrorCodes) {
+        setProperty(ERROR_RECONNECT_ON_CODES, reconnectionErrorCodes);
+    }
+
+    public Predicate<String> getIsReconnectErrorCode() {
+        return isReconnectErrorCode;
+    }
+
+    /**
+     * 
+     */
+    protected void configureIsReconnectErrorCode() {
+        String regex = StringUtils.trimToEmpty(getReconnectionErrorCodes());
+        if (regex.isEmpty()) {
+            isReconnectErrorCode = e -> false;
+        } else {
+            isReconnectErrorCode = Pattern.compile(regex).asPredicate();
+        }
     }
 }

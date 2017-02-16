@@ -22,7 +22,6 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -30,6 +29,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
@@ -202,12 +202,9 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
         tabbedPane.add(JMeterUtils
                 .getResString("web_testing_advanced"), advancedPanel);
 
-        JPanel emptyPanel = new JPanel();
-        emptyPanel.setMaximumSize(new Dimension());
-
-        add(makeTitlePanel(), BorderLayout.NORTH);
-        add(tabbedPane, BorderLayout.CENTER);
-        add(emptyPanel, BorderLayout.SOUTH);
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, makeTitlePanel(), tabbedPane);
+        splitPane.setOneTouchExpandable(true);
+        add(splitPane);
     }
 
     private JPanel getTimeOutPanel() {
@@ -251,21 +248,15 @@ public class HttpTestSampleGui extends AbstractSamplerGui {
         // retrieve Embedded resources
         retrieveEmbeddedResources = new JCheckBox(JMeterUtils.getResString("web_testing_retrieve_images")); // $NON-NLS-1$
         // add a listener to activate or not concurrent dwn.
-        retrieveEmbeddedResources.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED) { enableConcurrentDwn(true); }
-                else { enableConcurrentDwn(false); }
-            }
+        retrieveEmbeddedResources.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) { enableConcurrentDwn(true); }
+            else { enableConcurrentDwn(false); }
         });
         // Download concurrent resources
         concurrentDwn = new JCheckBox(JMeterUtils.getResString("web_testing_concurrent_download")); // $NON-NLS-1$
-        concurrentDwn.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                if (retrieveEmbeddedResources.isSelected() && e.getStateChange() == ItemEvent.SELECTED) { concurrentPool.setEnabled(true); }
-                else { concurrentPool.setEnabled(false); }
-            }
+        concurrentDwn.addItemListener(e -> {
+            if (retrieveEmbeddedResources.isSelected() && e.getStateChange() == ItemEvent.SELECTED) { concurrentPool.setEnabled(true); }
+            else { concurrentPool.setEnabled(false); }
         });
         concurrentPool = new JTextField(2); // 2 column size
         concurrentPool.setMinimumSize(new Dimension(10, (int) concurrentPool.getPreferredSize().getHeight()));

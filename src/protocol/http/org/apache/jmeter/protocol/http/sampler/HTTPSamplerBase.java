@@ -82,9 +82,9 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
+import org.slf4j.LoggerFactory;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
 import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
@@ -97,9 +97,9 @@ public abstract class HTTPSamplerBase extends AbstractSampler
     implements TestStateListener, TestIterationListener, ThreadListener, HTTPConstantsInterface,
         Replaceable {
 
-    private static final long serialVersionUID = 241L;
+    private static final long serialVersionUID = 242L;
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(HTTPSamplerBase.class);
 
     private static final Set<String> APPLIABLE_CONFIG_CLASSES = new HashSet<>(
             Arrays.asList(
@@ -374,25 +374,26 @@ public abstract class HTTPSamplerBase extends AbstractSampler
     }
 
     /**
-     * Determine if none of the parameters have a name, and if that
-     * is the case, it means that the parameter values should be sent
-     * as the entity body
+     * Determine if none of the parameters have a name, and if that is the case,
+     * it means that the parameter values should be sent as the entity body
      *
-     * @return true if none of the parameters have a name specified
+     * @return {@code true} if there are parameters and none of these have a
+     *         name specified, or {@link HTTPSamplerBase#getPostBodyRaw()} returns
+     *         {@code true}
      */
     public boolean getSendParameterValuesAsPostBody() {
         if (getPostBodyRaw()) {
             return true;
         } else {
-            boolean noArgumentsHasName = true;
+            boolean hasArguments = false;
             for (JMeterProperty jMeterProperty : getArguments()) {
+                hasArguments = true;
                 HTTPArgument arg = (HTTPArgument) jMeterProperty.getObjectValue();
                 if (arg.getName() != null && arg.getName().length() > 0) {
-                    noArgumentsHasName = false;
-                    break;
+                    return false;
                 }
             }
-            return noArgumentsHasName;
+            return hasArguments;
         }
     }
 

@@ -69,7 +69,7 @@ import org.apache.jmeter.gui.action.ActionRouter;
 import org.apache.jmeter.gui.action.SaveGraphics;
 import org.apache.jmeter.gui.util.FileDialoger;
 import org.apache.jmeter.gui.util.FilePanel;
-import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
+import org.apache.jmeter.gui.util.HeaderAsPropertyRendererWrapper;
 import org.apache.jmeter.gui.util.VerticalPanel;
 import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.samplers.SampleResult;
@@ -80,11 +80,12 @@ import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.JLabeledTextField;
 import org.apache.jorphan.gui.NumberRenderer;
 import org.apache.jorphan.gui.ObjectTableModel;
+import org.apache.jorphan.gui.ObjectTableSorter;
 import org.apache.jorphan.gui.RateRenderer;
 import org.apache.jorphan.gui.RendererUtils;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.reflect.Functor;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Aggregrate Table-Based Reporting Visualizer for JMeter. Props to the people
@@ -94,7 +95,7 @@ import org.apache.log.Logger;
  *
  */
 public class StatGraphVisualizer extends AbstractVisualizer implements Clearable, ActionListener {
-    private static final long serialVersionUID = 240L;
+    private static final long serialVersionUID = 242L;
 
     private static final String PCT1_LABEL = JMeterUtils.getPropDefault("aggregate_rpt_pct1", "90");
     private static final String PCT2_LABEL = JMeterUtils.getPropDefault("aggregate_rpt_pct2", "95");
@@ -104,7 +105,7 @@ public class StatGraphVisualizer extends AbstractVisualizer implements Clearable
     private static final Float PCT2_VALUE =  new Float(Float.parseFloat(PCT2_LABEL)/100);
     private static final Float PCT3_VALUE =  new Float(Float.parseFloat(PCT3_LABEL)/100);
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(StatGraphVisualizer.class);
 
     private static final String[] COLUMNS = { 
             "sampler_label",                  //$NON-NLS-1$
@@ -319,8 +320,8 @@ public class StatGraphVisualizer extends AbstractVisualizer implements Clearable
                 new Functor("getSentKBPerSecond") },            //$NON-NLS-1$
                 new Functor[] { null, null, null, null, null, null, null, null, null, null, null, null, null },
                 new Class[] { String.class, Long.class, Long.class, Long.class, Long.class, 
-                            Long.class, Long.class, Long.class, Long.class, String.class, 
-                            String.class, String.class, String.class});
+                            Long.class, Long.class, Long.class, Long.class, Double.class,
+                            Double.class, Double.class, Double.class});
     }
 
     // Column formats
@@ -467,9 +468,10 @@ public class StatGraphVisualizer extends AbstractVisualizer implements Clearable
         mainPanel.add(makeTitlePanel());
 
         myJTable = new JTable(model);
+        myJTable.setRowSorter(new ObjectTableSorter(model).fixLastRow());
         JMeterUtils.applyHiDPI(myJTable);
         // Fix centering of titles
-        myJTable.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer(getColumnsMsgParameters()));
+        HeaderAsPropertyRendererWrapper.setupDefaultRenderer(myJTable, getColumnsMsgParameters());
         myJTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         RendererUtils.applyRenderers(myJTable, getRenderers());
         myScrollPane = new JScrollPane(myJTable);
@@ -503,6 +505,7 @@ public class StatGraphVisualizer extends AbstractVisualizer implements Clearable
         });
 
         spane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        spane.setOneTouchExpandable(true);
         spane.setLeftComponent(myScrollPane);
         spane.setRightComponent(tabbedGraph);
         spane.setResizeWeight(.2);

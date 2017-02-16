@@ -40,9 +40,9 @@ import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.Interruptible;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Commons HTTPClient based soap sampler
@@ -50,7 +50,7 @@ import org.apache.log.Logger;
  */
 @Deprecated
 public class SoapSampler extends HTTPSampler2 implements Interruptible { // Implemented by parent class
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(SoapSampler.class);
 
     private static final long serialVersionUID = 240L;
 
@@ -184,13 +184,10 @@ public class SoapSampler extends HTTPSampler2 implements Interruptible { // Impl
 
                 @Override
                 public void writeRequest(OutputStream out) throws IOException {
-                    InputStream in = null;
-                    try{
-                        in = new BufferedInputStream(new FileInputStream(xmlFile));
+                    try (InputStream fileStream = new FileInputStream(xmlFile);
+                            InputStream in = new BufferedInputStream(fileStream)) {
                         IOUtils.copy(in, out);
                         out.flush();
-                    } finally {
-                        IOUtils.closeQuietly(in);
                     }
                 }
 

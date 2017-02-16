@@ -13,16 +13,15 @@ commons-io-2.5.jar
 commons-jexl-2.1.1.jar
 commons-jexl3-3.0.jar
 commons-lang3-3.5.jar
-commons-logging-1.2.jar
 commons-math3-3.5.jar
 commons-net-3.5.jar
 commons-pool2-2.4.2.jar
 excalibur-logger-1.1.jar
 geronimo-jms_1.1_spec-1.1.1.jar
-groovy-all-2.4.7.jar
-httpclient-4.5.2.jar
-httpcore-4.4.5.jar
-httpmime-4.5.2.jar
+groovy-all-2.4.8.jar
+httpclient-4.5.3.jar
+httpcore-4.4.6.jar
+httpmime-4.5.3.jar
 jorphan.jar (part of JMeter)
 logkit-2.0.jar
 oro-2.0.8.jar

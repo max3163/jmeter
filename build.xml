@@ -119,7 +119,7 @@
   <property name="findbugs.outName" value="reports/jmeter-fb" />
   <property name="skip.batchtest" value="false" />
   <property name="skip.bug52310" value="false" />
-  <property name="skip.test_https" value="false" />
+  <property name="skip.test_https" value="true" />
 
   <target name="findbugs" description="Run the stand-alone Findbugs detector">
     <echoproperties prefix="findbugs"/>
@@ -145,7 +145,6 @@
       <sourcePath path="${src.components}" />
       <sourcePath path="${src.functions}" />
       <class location="${lib.dir}/jorphan.jar" />
-      <class location="${lib.dir}/ApacheJMeter_slf4j_logkit.jar"/>
       <class location="${dest.jar}/ApacheJMeter_components.jar"/>
       <class location="${dest.jar}/ApacheJMeter_components.jar"/>
       <class location="${dest.jar}/ApacheJMeter_core.jar"/>
@@ -162,7 +161,6 @@
       <class location="${dest.jar}/ApacheJMeter_mongodb.jar"/>
       <class location="${dest.jar}/ApacheJMeter_tcp.jar"/>
       <class location="${dest.jar.jmeter}/ApacheJMeter.jar" />
-      <sourcePath path="${src.slf4j_logkit}" />
       <sourcePath path="${src.jorphan}" />
       <sourcePath path="${src.tcp}" />
       <sourcePath path="${src.jms}" />
@@ -229,7 +227,6 @@
   <property name="src.jms" value="src/protocol/jms"/>
   <property name="src.native" value="src/protocol/native"/>
   <property name="src.mongodb" value="src/protocol/mongodb"/>
-  <property name="src.slf4j_logkit" value="src/slf4j-logkit"/>
 
   <!-- Where the documentation sources live -->
   <property name="src.docs" value="xdocs"/>
@@ -255,7 +252,6 @@
     <pathelement location="${src.jms}"/>
     <pathelement location="${src.native}"/>
     <pathelement location="${src.mongodb}"/>
-    <pathelement location="${src.slf4j_logkit}"/>
   </path>
 
   <!-- Temporary build directories: where the .class live -->
@@ -276,7 +272,6 @@
   <property name="build.jms" value="build/protocol/jms"/>
   <property name="build.native" value="build/protocol/native"/>
   <property name="build.mongodb" value="build/protocol/mongodb"/>
-  <property name="build.slf4j_logkit" value="build/slf4j-logkit"/>
   <property name="build.test" value="build/test"/>
   <property name="build.res" value="build/res"/>
   <property name="build.test-res" value="test/resources"/>
@@ -383,7 +378,6 @@
     <include name="${lib.dir}/${accessors-smart.jar}"/>
     <include name="${lib.dir}/${apache-bsf.jar}"/>
     <include name="${lib.dir}/${asm.jar}"/>
-    <include name="${lib.dir}/${avalon-framework.jar}"/>
     <include name="${lib.dir}/${beanshell.jar}"/>
     <include name="${lib.dir}/${caffeine.jar}"/>
     <include name="${lib.dir}/${commons-codec.jar}"/>
@@ -394,21 +388,22 @@
     <include name="${lib.dir}/${commons-jexl2.jar}"/>
     <include name="${lib.dir}/${commons-jexl3.jar}"/>
     <include name="${lib.dir}/${commons-lang3.jar}"/>
-    <include name="${lib.dir}/${commons-logging.jar}"/>
     <include name="${lib.dir}/${commons-math3.jar}"/>
     <include name="${lib.dir}/${commons-net.jar}"/>
     <include name="${lib.dir}/${commons-pool2.jar}"/>
     <include name="${lib.dir}/${dnsjava.jar}"/>
-    <include name="${lib.dir}/${excalibur-logger.jar}"/>
     <include name="${lib.dir}/${freemarker.jar}"/>
     <include name="${lib.dir}/${groovy-all.jar}"/>
     <include name="${lib.dir}/${hamcrest-core.jar}"/>
     <include name="${lib.dir}/${httpclient.jar}"/>
+    <include name="${lib.dir}/${httpasyncclient.jar}"/>
     <include name="${lib.dir}/${httpcore.jar}"/>
+    <include name="${lib.dir}/${httpcore-nio.jar}"/>
     <include name="${lib.dir}/${httpmime.jar}"/>
     <include name="${lib.dir}/${jakarta-oro.jar}"/>
     <include name="${lib.dir}/${javamail.jar}"/>
     <include name="${lib.dir}/${jcharts.jar}"/>
+    <include name="${lib.dir}/${jcl-over-slf4j.jar}"/>
     <include name="${lib.dir}/${jms.jar}"/>
     <include name="${lib.dir}/${rhino.jar}"/>
     <include name="${lib.dir}/${jodd-core.jar}"/>
@@ -419,13 +414,17 @@
     <include name="${lib.dir}/${json-smart.jar}"/>
     <include name="${lib.dir}/${jsoup.jar}"/>
     <include name="${lib.dir}/${junit.jar}"/>
-    <include name="${lib.dir}/${logkit.jar}"/>
+    <include name="${lib.dir}/${log4j-1.2-api.jar}"/>
+    <include name="${lib.dir}/${log4j-core.jar}"/>
+    <include name="${lib.dir}/${log4j-slf4j-impl.jar}"/>
     <include name="${lib.dir}/${mongo-java-driver.jar}"/>
     <include name="${lib.dir}/${ph-css.jar}"/>
     <include name="${lib.dir}/${ph-commons.jar}"/>
     <include name="${lib.dir}/${rsyntaxtextarea.jar}"/>
     <include name="${lib.dir}/${serializer.jar}"/>
     <include name="${lib.dir}/${slf4j-api.jar}"/>
+    <include name="${lib.dir}/${slf4j-ext.jar}"/>
+    <include name="${lib.dir}/${log4j-api.jar}"/>
     <include name="${lib.dir}/${jtidy.jar}"/>
     <include name="${lib.dir}/${tika-core.jar}"/>
     <include name="${lib.dir}/${tika-parsers.jar}"/>
@@ -460,7 +459,6 @@
     <pathelement location="${lib.dir}/${accessors-smart.jar}"/>
     <pathelement location="${lib.dir}/${apache-bsf.jar}"/>
     <pathelement location="${lib.dir}/${asm.jar}"/>
-    <pathelement location="${lib.dir}/${avalon-framework.jar}"/>
     <pathelement location="${lib.dir}/${beanshell.jar}"/>
     <pathelement location="${lib.dir}/${caffeine.jar}"/>
     <pathelement location="${lib.dir}/${commons-codec.jar}"/>
@@ -471,17 +469,17 @@
     <pathelement location="${lib.dir}/${commons-jexl2.jar}"/>
     <pathelement location="${lib.dir}/${commons-jexl3.jar}"/>
     <pathelement location="${lib.dir}/${commons-lang3.jar}"/>
-    <pathelement location="${lib.dir}/${commons-logging.jar}"/>
     <pathelement location="${lib.dir}/${commons-math3.jar}"/>
     <pathelement location="${lib.dir}/${commons-net.jar}"/>
     <pathelement location="${lib.dir}/${commons-pool2.jar}"/>
     <pathelement location="${lib.dir}/${dnsjava.jar}"/>
-    <pathelement location="${lib.dir}/${excalibur-logger.jar}"/>
     <pathelement location="${lib.dir}/${freemarker.jar}"/>
     <pathelement location="${lib.dir}/${groovy-all.jar}"/>
     <pathelement location="${lib.dir}/${hamcrest-core.jar}"/>
     <pathelement location="${lib.dir}/${httpclient.jar}"/>
+    <pathelement location="${lib.dir}/${httpasyncclient.jar}"/>
     <pathelement location="${lib.dir}/${httpcore.jar}"/>
+    <pathelement location="${lib.dir}/${httpcore-nio.jar}"/>
     <pathelement location="${lib.dir}/${httpmime.jar}"/>
     <pathelement location="${lib.dir}/${jakarta-oro.jar}"/>
     <pathelement location="${lib.dir}/${javamail.jar}"/>
@@ -496,13 +494,16 @@
     <pathelement location="${lib.dir}/${json-smart.jar}"/>
     <pathelement location="${lib.dir}/${jsoup.jar}"/>
     <pathelement location="${lib.dir}/${junit.jar}"/>
-    <pathelement location="${lib.dir}/${logkit.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-1.2-api.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-core.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-slf4j-impl.jar}"/>
     <pathelement location="${lib.dir}/${mongo-java-driver.jar}"/>
     <pathelement location="${lib.dir}/${ph-css.jar}"/>
     <pathelement location="${lib.dir}/${ph-commons.jar}"/>
     <pathelement location="${lib.dir}/${rsyntaxtextarea.jar}"/>
     <pathelement location="${lib.dir}/${serializer.jar}"/>
     <pathelement location="${lib.dir}/${slf4j-api.jar}"/>
+    <pathelement location="${lib.dir}/${slf4j-ext.jar}"/>
     <pathelement location="${lib.dir}/${jtidy.jar}"/>
     <pathelement location="${lib.dir}/${tika-core.jar}"/>
     <pathelement location="${lib.dir}/${tika-parsers.jar}"/>
@@ -515,17 +516,19 @@
     <pathelement location="${lib.dir}/${xstream.jar}"/>
     <!-- Generated jars -->
     <fileset dir="${lib.dir}" includes="jorphan.jar"/>
-    <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar"/>
     <!-- API-only jars-->
     <fileset dir="${lib.api}" includes="*.jar"/>
     <!-- Optional jars -->
     <fileset dir="${lib.opt}" includes="*.jar"/>
   </path>
 
-  <path id="slf4j_logkit_classpath">
-    <!-- Externally produced jars -->
-    <pathelement location="${lib.dir}/${logkit.jar}"/>
-    <pathelement location="${lib.dir}/${slf4j-api.jar}"/>
+  <!-- Logging classpath -->
+  <path id="logging.classpath">
+    <pathelement location="${lib.dir}/${jcl-over-slf4j.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-api.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-core.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-1.2-api.jar}"/>
+    <pathelement location="${lib.dir}/${log4j-slf4j-impl.jar}"/>
   </path>
 
   <!-- Anakia classpath -->
@@ -534,7 +537,6 @@
     <pathelement location="${lib.doc}/${jdom.jar}"/>
     <pathelement location="${lib.dir}/${commons-collections.jar}"/>
     <pathelement location="${lib.doc}/${commons-lang.jar}"/>
-    <pathelement location="${lib.dir}/${logkit.jar}"/>
   </path>
 
   <!-- Version info filter set -->
@@ -546,14 +548,14 @@
     <filter token="YEAR" value="${year}"/>
   </filterset>
 
-  <!--
-      JMeter version
-      This is overridden for formal releases.
-  -->
-  <property name="jmeter.version" value="3.2-SNAPSHOT"/>
 
   <target name="init-version">
     <tstamp/>
+    <!--
+      JMeter version
+      This is overridden for formal releases.
+    -->
+    <property name="jmeter.version" value="3.2-SNAPSHOT"/>
     <!-- Remember to change "docversion" below if necessary -->
     <condition property="implementation.version"
           value="${jmeter.version} r${svn.revision}" else="${jmeter.version}.${DSTAMP}">
@@ -629,7 +631,9 @@
       <include name="**/*.java"/>
       <classpath>
         <pathelement location="${build.jorphan}"/>
+        <pathelement location="${lib.dir}/${log4j-core.jar}"/>
         <path refid="classpath"/>
+        <path refid="logging.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -671,6 +675,9 @@
         <pathelement location="${build.core}"/>
         <pathelement location="${build.components}"/>
         <path refid="classpath"/>
+        <pathelement location="${lib.dir}/${jcl-over-slf4j.jar}"/>
+        <pathelement location="${lib.dir}/${log4j-api.jar}"/>
+        <pathelement location="${lib.dir}/${log4j-core.jar}"/>
       </classpath>
     </javac>
   </target>
@@ -695,6 +702,7 @@
         <!-- Also include compiled jars to allow running tests without rebuilding source -->
         <fileset dir="${dest.jar}" includes="*.jar"/>
         <path refid="classpath"/>
+        <path refid="logging.classpath"/>
       </classpath>
     </javac>
   </target>
@@ -821,17 +829,6 @@
     </javac>
   </target>
 
-  <target name="compile-slf4j_logkit" description="Compile JMeter slf4j LogKit bootstrap classes.">
-    <mkdir dir="${build.slf4j_logkit}"/>
-    <javac srcdir="${src.slf4j_logkit}" destdir="${build.slf4j_logkit}" source="${src.java.version}" optimize="${optimize}" debug="on" target="${target.java.version}"
-           includeAntRuntime="${includeAntRuntime}" deprecation="${deprecation}" encoding="${encoding}">
-      <include name="**/*.java"/>
-      <classpath>
-        <path refid="slf4j_logkit_classpath"/>
-      </classpath>
-    </javac>
-  </target>
-
   <target name="compile-jms" depends="compile-jorphan,compile-core,compile-components"
         description="Compile components specific to JMS sampling.">
     <mkdir dir="${build.jms}"/>
@@ -875,7 +872,7 @@
   </target>
 
   <target name="compile"
-  depends="_message_3rdParty,compile-slf4j_logkit,compile-core,compile-components,compile-functions,compile-protocols,compile-junit,compile-jms,compile-native, compile-mongodb"
+  depends="_message_3rdParty,compile-core,compile-components,compile-functions,compile-protocols,compile-junit,compile-jms,compile-native, compile-mongodb"
   description="Compile everything."/>
 
   <target name="run_gui" depends="package" description="Run the JMeter GUI off the jar files">
@@ -1156,18 +1153,6 @@ run JMeter unless all the JMeter jars are added.
       <fileset dir="${src.mongodb}" includes="**/*.properties" />
     </jar>
 
-    <!-- slf4j-logkit -->
-    <!-- Ensure that build dir exists, even if slf4j-logkit has not been built -->
-    <mkdir dir="${build.slf4j_logkit}"/>
-    <jar jarfile="${lib.dir}/ApacheJMeter_slf4j_logkit.jar" manifest="${build.dir}/MANIFEST_BIN.MF">
-      <zipfileset file="${resources.meta-inf}/default.notice"
-        fullpath="META-INF/NOTICE" />
-      <zipfileset file="${resources.meta-inf}/default.license"
-        fullpath="META-INF/LICENSE" />
-      <fileset dir="${build.slf4j_logkit}" includes="**/*.class" />
-      <fileset dir="${src.slf4j_logkit}" includes="**/*.properties" />
-    </jar>
-
     <jar jarfile="${lib.dir}/jorphan.jar" manifest="${build.dir}/MANIFEST_BIN.MF">
       <zipfileset file="${resources.meta-inf}/default.notice"
           fullpath="META-INF/NOTICE" />
@@ -1238,8 +1223,7 @@ run JMeter unless all the JMeter jars are added.
     <include name="${dest.jar.jmeter}/krb5.conf"/>
     <include name="${dest.jar.jmeter}/hc.parameters"/>
     <include name="${dest.jar.jmeter}/jmeter.properties"/>
-    <include name="${dest.jar.jmeter}/log4j.conf"/>
-    <include name="${dest.jar.jmeter}/logkit.xml"/>
+    <include name="${dest.jar.jmeter}/log4j2.xml"/>
     <include name="${dest.jar.jmeter}/reportgenerator.properties"/>
     <include name="${dest.jar.jmeter}/upgrade.properties"/>
     <include name="${dest.jar.jmeter}/saveservice.properties"/>
@@ -1319,7 +1303,6 @@ run JMeter unless all the JMeter jars are added.
     <include name="${dest.jar}/"/>
     <include name="${lib.dir}/bshclient.jar"/>
     <include name="${lib.dir}/jorphan.jar"/>
-    <include name="${lib.dir}/ApacheJMeter_slf4j_logkit.jar"/>
     <include name="${lib.dir}/junit/test.jar"/>
     <include name="${dest.jar.jmeter}/ApacheJMeter.jar"/>
     <!-- Help documentation, binary files -->
@@ -1627,7 +1610,6 @@ run JMeter unless all the JMeter jars are added.
       <fileset dir="${dest.jar}" includes="ApacheJMeter*.jar"/>
       <fileset dir="${dest.jar.jmeter}" includes="ApacheJMeter.jar"/>
       <fileset dir="${lib.dir}" includes="jorphan.jar"/>
-      <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar"/>
     </copy>
     <copy tofile="${maven.dir}/ApacheJMeter_junit-test.jar" file="${lib.dir}/junit/test.jar"/>
     <!--
@@ -1640,15 +1622,16 @@ run JMeter unless all the JMeter jars are added.
       <zipfileset file="${resources.meta-inf}/default.license"
           fullpath="META-INF/LICENSE" />
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="*.bshrc"/>
+      <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="*.groovy"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="*.parameters"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="*.properties"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="jaas.conf"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="krb5.conf"/>
-      <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="log4j.conf"/>
-      <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="logkit.xml"/>
+      <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="log4j2.xml"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="proxyserver.jks"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="users.dtd"/>
       <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="users.xml"/>
+      <zipfileset dir="${dest.jar.jmeter}" prefix="bin" includes="report-template/**/*.*" />
     </jar>
   </target>
 
@@ -1667,7 +1650,7 @@ run JMeter unless all the JMeter jars are added.
       <pathelement location="${lib.dir}/${beanshell.jar}"/>
       <!-- Needed to work with Java 1.5 -->
       <pathelement location="${lib.dir}/${apache-bsf.jar}"/>
-      <pathelement location="${lib.dir}/${commons-logging.jar}"/>
+      <pathelement location="${lib.dir}/${jcl-over-slf4j.jar}"/>
     </classpath>
     <!-- type of script to create: upload, publish or delete -->
     <attribute name="type"/>
@@ -2006,7 +1989,6 @@ run JMeter unless all the JMeter jars are added.
 
     <deployfile stem="ApacheJMeter_parent" packaging="pom"/>
     <deployfile stem="jorphan"/>
-    <deployfile stem="ApacheJMeter_slf4j_logkit"/>
     <deployfile stem="ApacheJMeter"/>
     <deployfile stem="ApacheJMeter_components"/>
     <deployfile stem="ApacheJMeter_config"/>
@@ -2244,7 +2226,6 @@ run JMeter unless all the JMeter jars are added.
     <delete quiet="false" failonerror="false">
       <fileset dir="${dest.jar.jmeter}" includes="ApacheJMeter.jar"/>
       <fileset dir="${lib.dir}" includes="jorphan.jar"/>
-      <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar"/>
       <fileset dir="${lib.dir}" includes="bshclient.jar"/>
       <fileset dir="${dest.jar}" includes="*.jar"/>
       <fileset dir="${build.dir}"/>
@@ -2297,7 +2278,10 @@ run JMeter unless all the JMeter jars are added.
       bottom="Copyright &amp;#xA9; 1998-${THISYEAR} Apache Software Foundation. All Rights Reserved."
       packagenames="org.apache.jmeter.*,org.apache.jorphan.*"
       excludepackagenames="org.apache.jorphan.timer">
-      <classpath refid="classpath"/>
+      <classpath>
+        <path refid="classpath"/>
+        <path refid="logging.classpath"/>
+      </classpath>
       <link href="http://docs.oracle.com/javase/8/docs/api/"/>
     </javadoc>
     <!-- No need for Javadoc patch (CVE-2013-1571) now we are using Java 8 minimum -->
@@ -2440,7 +2424,7 @@ run JMeter unless all the JMeter jars are added.
     </condition>
     <tstamp>
       <!-- Use variable port to help avoid clashes on CI servers -->
-      <format property="rmi_port" pattern="1mmss"/>
+      <format property="rmi_port" pattern="2SSS"/>
     </tstamp>
     <parallel>
       <daemons>
@@ -2449,6 +2433,7 @@ run JMeter unless all the JMeter jars are added.
             <fileset dir="${dest.jar.jmeter}" includes="*.jar"/>
             <fileset dir="${dest.jar}" includes="*.jar"/>
             <path refid="classpath"/>
+            <path refid="logging.classpath"/>
           </classpath>
           <jvmarg value="${jacoco_params}batchtest:daemon:java(server)"/>
           <sysproperty key="java.awt.headless" value="true"/>
@@ -2459,6 +2444,8 @@ run JMeter unless all the JMeter jars are added.
           <arg value="-qjmeter.properties"/>
           <!-- reset the logging and other parameters -->
           <arg value="-qtestfiles/jmeter-batch.properties"/>
+          <arg value="-i"/>
+          <arg value="testfiles/log4j2-batch.xml"/>
           <arg value="-j"/>
           <arg value="${batchtestserver.out}/${batchtestserver.log}"/>
           <arg value="-Dserver_port=${rmi_port}"/>
@@ -2556,6 +2543,7 @@ run JMeter unless all the JMeter jars are added.
         <fileset dir="${dest.jar.jmeter}" includes="*.jar"/>
         <fileset dir="${dest.jar}" includes="*.jar"/>
         <path refid="classpath"/>
+        <path refid="logging.classpath"/>
       </classpath>
       <jvmarg value="${jacoco_params}batchtest:java(${taskname})"/>
       <!-- Detect if non-GUI runs OK headless by forcing it to try using non-headless mode -->
@@ -2571,6 +2559,8 @@ run JMeter unless all the JMeter jars are added.
       <arg value="-qtestfiles/jmeter-batch.properties"/>
       <arg value="-n"/>
       <arg value="-ttestfiles/${batchtest.name}.jmx"/>
+      <arg value="-i"/>
+      <arg value="testfiles/log4j2-batch.xml"/>
       <arg value="-j"/>
       <arg value="${batchtest.name}.log"/>
       <arg value="-l"/>
@@ -2703,6 +2693,18 @@ run JMeter unless all the JMeter jars are added.
       <param name="batchtest.name" value="TEST_HTTPS"/>
       <param name="skip.batchtest" value="${skip.test_https}" />
     </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="Bug60607"/>
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="SlowCharsFeature"/>
+    </antcall>
+
+    <antcall target="batchtest">
+      <param name="batchtest.name" value="Http4ImplPreemptiveBasicAuth"/>
+    </antcall>
   </target>
 
   <!-- Run all batch tests; used by test target -->
@@ -2759,6 +2761,7 @@ run JMeter unless all the JMeter jars are added.
         <pathelement location="${build.test}"/>
         <pathelement location="${build.test-res}"/>
         <path refid="classpath"/>
+        <path refid="logging.classpath"/>
       </classpath>
       <jvmarg value="-server"/>
       <jvmarg value="${jacoco_params}_test:java"/>
@@ -2766,6 +2769,7 @@ run JMeter unless all the JMeter jars are added.
       <sysproperty key="java.awt.headless" value="${test.headless}"/>
       <sysproperty key="testsaveservice.saveout" value="${testsaveservice.saveout}" />
       <sysproperty key="gump.run" value="${gump.run}" />
+      <sysproperty key="log4j.configurationFile" value="${basedir}/bin/log4j2.xml" />
       <arg value="${build.test}"/>
       <arg value="${basedir}/bin/jmeter.properties"/>
       <arg value="org.apache.jmeter.util.JMeterUtils"/>
@@ -2799,6 +2803,7 @@ run JMeter unless all the JMeter jars are added.
         <fileset dir="${dest.jar}" includes="*.jar"/>
         <pathelement location="${build.test}"/>
         <path refid="classpath"/>
+        <path refid="logging.classpath"/>
       </classpath>
       <test name="${test.case}" todir="reports"/>
     </junit>
@@ -2829,6 +2834,7 @@ run JMeter unless all the JMeter jars are added.
       <pathelement location="${build.test}"/>
       <pathelement location="${build.test-res}"/>
       <path refid="classpath"/>
+      <path refid="logging.classpath"/>
     </classpath>
     <batchtest todir="reports" skipNonTests="true">
         <fileset dir="${src.test}">
@@ -2929,7 +2935,8 @@ run JMeter unless all the JMeter jars are added.
       <filterchain>
         <tokenfilter>
           <filetokenizer/>
-          <replaceregex pattern="-\d+\.\d+.*(\.jar|\.zip)" replace="-*\1"/>
+          <!-- Replace version with a wildcard. e.g, foo-1.2.3.jar or foo-1.2.3.RELEASE.jar to foo-*.jar -->
+          <replaceregex pattern="-(\d+\.){2,}([A-Za-z]+\.)?(jar|zip)" replace="-*\2"/>
         </tokenfilter>
       </filterchain>
     </loadresource>
@@ -3005,7 +3012,6 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="accessors-smart"/>
     <process_jarfile jarname="apache-bsf"/>
     <process_jarfile jarname="asm"/>
-    <process_jarfile jarname="avalon-framework"/>
     <process_jarfile jarname="bcmail" dest.dir="${lib.api}"/>
     <process_jarfile jarname="bcprov" dest.dir="${lib.api}"/>
     <process_jarfile jarname="bcpkix" dest.dir="${lib.api}"/>
@@ -3019,17 +3025,17 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="commons-jexl2"/>
     <process_jarfile jarname="commons-jexl3"/>
     <process_jarfile jarname="commons-lang3"/>
-    <process_jarfile jarname="commons-logging"/>
     <process_jarfile jarname="commons-math3"/>
     <process_jarfile jarname="commons-net"/>
     <process_jarfile jarname="commons-pool2"/>
     <process_jarfile jarname="dnsjava"/>
-    <process_jarfile jarname="excalibur-logger"/>
     <process_jarfile jarname="freemarker"/>
     <process_jarfile jarname="groovy-all"/>
     <process_jarfile jarname="hamcrest-core"/>
     <process_jarfile jarname="httpclient"/>
+    <process_jarfile jarname="httpasyncclient"/>
     <process_jarfile jarname="httpcore"/>
+    <process_jarfile jarname="httpcore-nio"/>
     <process_jarfile jarname="httpmime"/>
     <process_jarfile jarname="jakarta-oro"/>
     <process_jarfile jarname="javamail"/>
@@ -3045,13 +3051,18 @@ run JMeter unless all the JMeter jars are added.
     <process_jarfile jarname="json-smart"/>
     <process_jarfile jarname="jsoup"/>
     <process_jarfile jarname="junit"/>
-    <process_jarfile jarname="logkit"/>
     <process_jarfile jarname="mongo-java-driver"/>
     <process_jarfile jarname="ph-css" />
     <process_jarfile jarname="ph-commons" />
     <process_jarfile jarname="rsyntaxtextarea"/>
     <process_jarfile jarname="serializer"/>
     <process_jarfile jarname="slf4j-api"/>
+    <process_jarfile jarname="slf4j-ext"/>
+    <process_jarfile jarname="jcl-over-slf4j"/>
+    <process_jarfile jarname="log4j-api"/>
+    <process_jarfile jarname="log4j-1.2-api"/>
+    <process_jarfile jarname="log4j-core"/>
+    <process_jarfile jarname="log4j-slf4j-impl"/>
     <process_jarfile jarname="jtidy"/>
     <process_jarfile jarname="tika-core"/>
     <process_jarfile jarname="tika-parsers"/>
@@ -3099,12 +3110,19 @@ run JMeter unless all the JMeter jars are added.
     <delete verbose="true">
       <!-- bcprov jars no longer have the same prefix so the wildcard delete does not work; drop any old ones -->
       <fileset dir="${lib.api}" includes="bcmail-jdk15-*.jar bcprov-jdk15-*.jar"/>
+      <fileset dir="${lib.dir}" includes="ApacheJMeter_slf4j_logkit.jar" />
       <!-- tidy up unused Excalibur jars -->
-      <fileset dir="${lib.dir}" includes="htmllexer-2.1.jar htmlparser-2.1.jar excalibur-datasource-2.1.jar excalibur-instrument-1.0.jar excalibur-pool-api-2.1.jar excalibur-pool-impl-2.1.jar excalibur-pool-instrumented-2.1.jar"/>
+      <fileset dir="${lib.dir}" includes="avalon-framework-4.1.4.jar excalibur-datasource-2.1.jar excalibur-instrument-1.0.jar excalibur-logger-1.1.jar excalibur-pool-api-2.1.jar excalibur-pool-impl-2.1.jar excalibur-pool-instrumented-2.1.jar"/>
       <!-- jdom jar has moved; drop the old one -->
       <fileset dir="${lib.dir}" includes="jdom-1.1.3.jar"/>
       <!-- Drop slf4j-nop implementation -->
       <fileset dir="${lib.dir}" includes="slf4j-nop-1.7.13.jar"/>
+      <!-- tidy up unused commons-logging jar -->
+      <fileset dir="${lib.dir}" includes="commons-logging-1.2.jar"/>
+      <!-- tidy up unused htmlparser jars -->
+      <fileset dir="${lib.dir}" includes="htmllexer-2.1.jar htmlparser-2.1.jar"/>
+      <!-- tidy up unused logkit jars -->
+      <fileset dir="${lib.dir}" includes="logkit-2.0.jar"/>
     </delete>
     <antcall target="_process_all_jars">
         <param name="_get_file" value="true"/>
@@ -3170,7 +3188,6 @@ run JMeter unless all the JMeter jars are added.
                 <fileset dir="${build.mongodb}"/>
                 <fileset dir="${build.native}"/>
                 <fileset dir="${build.tcp}"/>
-                <fileset dir="${build.slf4j_logkit}"/>
                 <fileset dir="${build.test}"/>
             </classfiles>
             <sourcefiles encoding="${encoding}">
@@ -3189,7 +3206,6 @@ run JMeter unless all the JMeter jars are added.
                 <fileset dir="${src.mongodb}"/>
                 <fileset dir="${src.native}"/>
                 <fileset dir="${src.tcp}"/>
-                <fileset dir="${src.slf4j_logkit}"/>
                 <fileset dir="${src.test}"/>
             </sourcefiles>
         </structure>
@@ -3366,86 +3382,86 @@ run JMeter unless all the JMeter jars are added.
     <fileset dir="./lib/opt" includes="**/*.jar" />
   </path>
 
-  <property name="sonar.organizationName" value="Apache" />
-  <property name="sonar.projectName" value="JMeter" />
-
-  <property name="sonar.projectKey" value="org.apache.jmeter:${sonar.projectName}" />
-  <property name="sonar.projectVersion" value="${jmeter.version}" />
-  <property name="sonar.language" value="java" />
-  <property name="sonar.links.homepage" value="http://jmeter.apache.org" />
-  <property name="sonar.links.ci" value="https://builds.apache.org/job/JMeter-trunk/" />
-  <property name="sonar.links.scm" value="http://jmeter.apache.org/svnindex.html" />
-  <property name="sonar.links.issue" value="http://jmeter.apache.org/issues.html" />
-  <property name="sonar.modules" value="core,http,ftp,java,jdbc,ldap,mail,components,functions,jorphan,tcp,jms,native" />
-  <property name="sonar.java.binaries" value="${build.core},${build.http},${build.core},${build.http},${build.ftp},${build.java},${build.jdbc},${build.ldap},${build.mail},${build.components},${build.functions},${build.jorphan},${build.tcp},${build.jms},${build.native}" />
-  <property name="sonar.java.libraries" value="lib,lib/opt" />
-
-  <property name="sonar.junit.reportsPath" value="reports" />
-  <property name="sonar.jacoco.reportPath" value="reports/jacoco.exec" />
-
-  <property name="sonar.issue.ignore.multicriteria" value="c1,c2,c3,c4,c5" />
-  <property name="sonar.issue.ignore.multicriteria.c1.ruleKey"
-         value="squid:S1948" />
-  <property name="sonar.issue.ignore.multicriteria.c1.resourceKey"
-         value="**/*.java" />
-  <property name="sonar.issue.ignore.multicriteria.c2.ruleKey"
-         value="squid:S00112" />
-  <property name="sonar.issue.ignore.multicriteria.c2.resourceKey"
-         value="**/*.java" />
-  <property name="sonar.issue.ignore.multicriteria.c3.ruleKey"
-         value="squid:MaximumInheritanceDepth" />
-  <property name="sonar.issue.ignore.multicriteria.c3.resourceKey"
-         value="**/*.java" />
-  <property name="sonar.issue.ignore.multicriteria.c4.ruleKey"
-         value="squid:S134" />
-  <property name="sonar.issue.ignore.multicriteria.c4.resourceKey"
-         value="**/*.java" />
-  <property name="sonar.issue.ignore.multicriteria.c5.ruleKey"
-         value="squid:S1192" />
-  <property name="sonar.issue.ignore.multicriteria.c5.resourceKey"
-         value="**/*.java" />
-  <property name="core.sonar.projectName" value="core" />
-  <property name="core.sonar.sources" value="${src.core}" />
-  <property name="core.sonar.projectBaseDir" value="./" />
-  <property name="http.sonar.projectName" value="http" />
-  <property name="http.sonar.sources" value="${src.http}" />
-  <property name="http.sonar.projectBaseDir" value="./" />
-  <property name="ftp.sonar.projectName" value="ftp" />
-  <property name="ftp.sonar.sources" value="${src.ftp}" />
-  <property name="ftp.sonar.projectBaseDir" value="./" />
-  <property name="java.sonar.projectName" value="java" />
-  <property name="java.sonar.sources" value="${src.java}" />
-  <property name="java.sonar.projectBaseDir" value="./" />
-  <property name="jdbc.sonar.projectName" value="jdbc" />
-  <property name="jdbc.sonar.sources" value="${src.jdbc}" />
-  <property name="jdbc.sonar.projectBaseDir" value="./" />
-  <property name="ldap.sonar.projectName" value="ldap" />
-  <property name="ldap.sonar.sources" value="${src.ldap}" />
-  <property name="ldap.sonar.projectBaseDir" value="./" />
-  <property name="mail.sonar.projectName" value="mail" />
-  <property name="mail.sonar.sources" value="${src.mail}" />
-  <property name="mail.sonar.projectBaseDir" value="./" />
-  <property name="components.sonar.projectName" value="components" />
-  <property name="components.sonar.sources" value="${src.components}" />
-  <property name="components.sonar.projectBaseDir" value="./" />
-  <property name="functions.sonar.projectName" value="functions" />
-  <property name="functions.sonar.sources" value="${src.functions}" />
-  <property name="functions.sonar.projectBaseDir" value="./" />
-  <property name="jorphan.sonar.projectName" value="jorphan" />
-  <property name="jorphan.sonar.sources" value="${src.jorphan}" />
-  <property name="jorphan.sonar.projectBaseDir" value="./" />
-  <property name="tcp.sonar.projectName" value="tcp" />
-  <property name="tcp.sonar.sources" value="${src.tcp}" />
-  <property name="tcp.sonar.projectBaseDir" value="./" />
-  <property name="jms.sonar.projectName" value="jms" />
-  <property name="jms.sonar.sources" value="${src.jms}" />
-  <property name="jms.sonar.projectBaseDir" value="./" />
-  <property name="native.sonar.projectName" value="native" />
-  <property name="native.sonar.sources" value="${src.native}" />
-  <property name="native.sonar.projectBaseDir" value="./" />
 
   <target name="_sonar">
     <property environment="env" />
+    <property name="sonar.organizationName" value="Apache" />
+    <property name="sonar.projectName" value="JMeter" />
+
+    <property name="sonar.projectKey" value="org.apache.jmeter:${sonar.projectName}" />
+    <property name="sonar.projectVersion" value="${jmeter.version}" />
+    <property name="sonar.language" value="java" />
+    <property name="sonar.links.homepage" value="http://jmeter.apache.org" />
+    <property name="sonar.links.ci" value="https://builds.apache.org/job/JMeter-trunk/" />
+    <property name="sonar.links.scm" value="http://jmeter.apache.org/svnindex.html" />
+    <property name="sonar.links.issue" value="http://jmeter.apache.org/issues.html" />
+    <property name="sonar.modules" value="core,http,ftp,java,jdbc,ldap,mail,components,functions,jorphan,tcp,jms,native" />
+    <property name="sonar.java.binaries" value="${build.core},${build.http},${build.core},${build.http},${build.ftp},${build.java},${build.jdbc},${build.ldap},${build.mail},${build.components},${build.functions},${build.jorphan},${build.tcp},${build.jms},${build.native}" />
+    <property name="sonar.java.libraries" value="lib,lib/opt" />
+
+    <property name="sonar.junit.reportsPath" value="reports" />
+    <property name="sonar.jacoco.reportPath" value="reports/jacoco.exec" />
+
+    <property name="sonar.issue.ignore.multicriteria" value="c1,c2,c3,c4,c5" />
+    <property name="sonar.issue.ignore.multicriteria.c1.ruleKey"
+           value="squid:S1948" />
+    <property name="sonar.issue.ignore.multicriteria.c1.resourceKey"
+           value="**/*.java" />
+    <property name="sonar.issue.ignore.multicriteria.c2.ruleKey"
+           value="squid:S00112" />
+    <property name="sonar.issue.ignore.multicriteria.c2.resourceKey"
+           value="**/*.java" />
+    <property name="sonar.issue.ignore.multicriteria.c3.ruleKey"
+           value="squid:MaximumInheritanceDepth" />
+    <property name="sonar.issue.ignore.multicriteria.c3.resourceKey"
+           value="**/*.java" />
+    <property name="sonar.issue.ignore.multicriteria.c4.ruleKey"
+           value="squid:S134" />
+    <property name="sonar.issue.ignore.multicriteria.c4.resourceKey"
+           value="**/*.java" />
+    <property name="sonar.issue.ignore.multicriteria.c5.ruleKey"
+           value="squid:S1192" />
+    <property name="sonar.issue.ignore.multicriteria.c5.resourceKey"
+           value="**/*.java" />
+    <property name="core.sonar.projectName" value="core" />
+    <property name="core.sonar.sources" value="${src.core}" />
+    <property name="core.sonar.projectBaseDir" value="./" />
+    <property name="http.sonar.projectName" value="http" />
+    <property name="http.sonar.sources" value="${src.http}" />
+    <property name="http.sonar.projectBaseDir" value="./" />
+    <property name="ftp.sonar.projectName" value="ftp" />
+    <property name="ftp.sonar.sources" value="${src.ftp}" />
+    <property name="ftp.sonar.projectBaseDir" value="./" />
+    <property name="java.sonar.projectName" value="java" />
+    <property name="java.sonar.sources" value="${src.java}" />
+    <property name="java.sonar.projectBaseDir" value="./" />
+    <property name="jdbc.sonar.projectName" value="jdbc" />
+    <property name="jdbc.sonar.sources" value="${src.jdbc}" />
+    <property name="jdbc.sonar.projectBaseDir" value="./" />
+    <property name="ldap.sonar.projectName" value="ldap" />
+    <property name="ldap.sonar.sources" value="${src.ldap}" />
+    <property name="ldap.sonar.projectBaseDir" value="./" />
+    <property name="mail.sonar.projectName" value="mail" />
+    <property name="mail.sonar.sources" value="${src.mail}" />
+    <property name="mail.sonar.projectBaseDir" value="./" />
+    <property name="components.sonar.projectName" value="components" />
+    <property name="components.sonar.sources" value="${src.components}" />
+    <property name="components.sonar.projectBaseDir" value="./" />
+    <property name="functions.sonar.projectName" value="functions" />
+    <property name="functions.sonar.sources" value="${src.functions}" />
+    <property name="functions.sonar.projectBaseDir" value="./" />
+    <property name="jorphan.sonar.projectName" value="jorphan" />
+    <property name="jorphan.sonar.sources" value="${src.jorphan}" />
+    <property name="jorphan.sonar.projectBaseDir" value="./" />
+    <property name="tcp.sonar.projectName" value="tcp" />
+    <property name="tcp.sonar.sources" value="${src.tcp}" />
+    <property name="tcp.sonar.projectBaseDir" value="./" />
+    <property name="jms.sonar.projectName" value="jms" />
+    <property name="jms.sonar.sources" value="${src.jms}" />
+    <property name="jms.sonar.projectBaseDir" value="./" />
+    <property name="native.sonar.projectName" value="native" />
+    <property name="native.sonar.sources" value="${src.native}" />
+    <property name="native.sonar.projectBaseDir" value="./" />
     <condition property="sonar.host.url" value="${env.SONAR_HOST_URL}" else="http://localhost:9000">
       <isset property="env.SONAR_HOST_URL" />
     </condition>

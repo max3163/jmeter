@@ -18,7 +18,11 @@
 
 package org.apache.jmeter.util;
 
+import java.awt.Dialog;
+import java.awt.Font;
+import java.awt.Frame;
 import java.awt.HeadlessException;
+import java.awt.Window;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +33,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,28 +47,31 @@ import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.UIDefaults;
+import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.reflect.ClassFinder;
 import org.apache.jorphan.test.UnitTestManager;
 import org.apache.jorphan.util.JMeterError;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
 import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.PatternCacheLRU;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class contains the static utility methods used by JMeter.
  *
  */
 public class JMeterUtils implements UnitTestManager {
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(JMeterUtils.class);
     
     // Note: cannot use a static variable here, because that would be processed before the JMeter properties
     // have been defined (Bug 52783)
@@ -135,21 +143,21 @@ public class JMeterUtils implements UnitTestManager {
      * @return the Properties from the file
      * @see #getJMeterProperties()
      * @see #loadJMeterProperties(String)
-     * @see #initLogging()
      * @see #initLocale()
      */
     public static Properties getProperties(String file) {
         loadJMeterProperties(file);
-        initLogging();
         initLocale();
         return appProperties;
     }
 
     /**
      * Initialise JMeter logging
+     * @deprecated
      */
+    @Deprecated
     public static void initLogging() {
-        LoggingManager.initializeLogging(appProperties);
+        // NOOP
     }
 
     /**
@@ -1144,4 +1152,56 @@ public class JMeterUtils implements UnitTestManager {
         return delimiterValue;
     }
 
+    /**
+     * Apply HiDPI scale factor on font if HiDPI mode is enabled
+     */
+    public static void applyHiDPIOnFonts() {
+        if (!getHiDPIMode()) {
+            return;
+        }
+        applyScaleOnFonts((float) getHiDPIScaleFactor());
+    }
+    
+    /**
+     * Apply HiDPI scale factor on fonts
+     * @param scale float scale to apply
+     */
+    public static void applyScaleOnFonts(final float scale) {
+        log.info("Applying HiDPI scale: {}", scale);
+        SwingUtilities.invokeLater(() -> {
+            UIDefaults defaults = UIManager.getLookAndFeelDefaults();
+            // If I iterate over the entrySet under ubuntu with jre 1.8.0_121
+            // the font objects are missing, so iterate over the keys, only
+            for (Object key : new ArrayList<Object>(defaults.keySet())) {
+                Object value = defaults.get(key);
+                log.debug("Try key {} with value {}", key, value);
+                if (value instanceof Font) {
+                    Font font = (Font) value;
+                    final float newSize = font.getSize() * scale;
+                    if (font instanceof FontUIResource) {
+                        defaults.put(key, new FontUIResource(font.getName(),
+                                font.getStyle(), Math.round(newSize)));
+                    } else {
+                        defaults.put(key, font.deriveFont(newSize));
+                    }
+                }
+            }
+            JMeterUtils.refreshUI();
+        });
+    }
+
+    /**
+     * Refresh UI after LAF change or resizing
+     */
+    public static final void refreshUI() {
+        for (Window w : Window.getWindows()) {
+            SwingUtilities.updateComponentTreeUI(w);
+            if (w.isDisplayable() &&
+                (w instanceof Frame ? !((Frame)w).isResizable() :
+                w instanceof Dialog ? !((Dialog)w).isResizable() :
+                true)) {
+                w.pack();
+            }
+        }
+    }
 }

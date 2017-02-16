@@ -37,6 +37,9 @@ import javax.swing.SwingUtilities;
 import org.apache.jmeter.engine.util.ValueReplacer;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.UndoHistory.HistoryListener;
+import org.apache.jmeter.gui.action.TreeNodeNamingPolicy;
+import org.apache.jmeter.gui.action.impl.DefaultTreeNodeNamingPolicy;
+import org.apache.jmeter.gui.logging.GuiLogEventBus;
 import org.apache.jmeter.gui.tree.JMeterTreeListener;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
@@ -53,8 +56,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.LocaleChangeEvent;
 import org.apache.jmeter.util.LocaleChangeListener;
 import org.apache.jorphan.collections.HashTree;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * GuiPackage is a static class that provides convenient access to information
@@ -67,7 +70,7 @@ import org.apache.log.Logger;
  */
 public final class GuiPackage implements LocaleChangeListener, HistoryListener {
     /** Logging. */
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(GuiPackage.class);
 
     /** Singleton instance. */
     private static GuiPackage guiPack;
@@ -127,6 +130,11 @@ public final class GuiPackage implements LocaleChangeListener, HistoryListener {
      * History for tree states
      */
     private UndoHistory undoHistory = new UndoHistory();
+
+    /**
+     * GUI Logging Event Bus.
+     */
+    private GuiLogEventBus logEventBus = new GuiLogEventBus();
 
     /**
      * Private constructor to permit instantiation only from within this class.
@@ -653,6 +661,8 @@ public final class GuiPackage implements LocaleChangeListener, HistoryListener {
 
     private final List<Stoppable> stoppables = Collections.synchronizedList(new ArrayList<Stoppable>());
 
+    private TreeNodeNamingPolicy namingPolicy;
+
     /**
      * Sets the filepath of the current test plan. It's shown in the main frame
      * title and used on saving.
@@ -856,4 +866,32 @@ public final class GuiPackage implements LocaleChangeListener, HistoryListener {
         ((JMeterToolBar)toolbar).updateUndoRedoIcons(history.canUndo(), history.canRedo());
     }
 
+    /**
+     * @return {@link TreeNodeNamingPolicy}
+     */
+    public TreeNodeNamingPolicy getNamingPolicy() {
+        if(namingPolicy == null) {
+            final String namingPolicyImplementation = 
+                    JMeterUtils.getPropDefault("naming_policy.impl", //$NON-NLS-1$ 
+                            DefaultTreeNodeNamingPolicy.class.getName());
+
+            try {
+                Class<?> implementationClass = Class.forName(namingPolicyImplementation);
+                this.namingPolicy = (TreeNodeNamingPolicy) implementationClass.newInstance();
+                
+            } catch (Exception ex) {
+                log.error("Failed to create configured naming policy:"+namingPolicyImplementation+", will use default one", ex);
+                this.namingPolicy = new DefaultTreeNodeNamingPolicy();
+            }
+        }
+        return namingPolicy;
+    }
+
+    /**
+     * Return {@link GuiLogEventBus}.
+     * @return {@link GuiLogEventBus}
+     */
+    public GuiLogEventBus getLogEventBus() {
+        return logEventBus;
+    }
 }

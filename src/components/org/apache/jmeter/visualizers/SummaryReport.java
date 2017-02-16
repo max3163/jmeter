@@ -38,12 +38,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.TableCellRenderer;
 
 import org.apache.jmeter.gui.util.FileDialoger;
-import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
+import org.apache.jmeter.gui.util.HeaderAsPropertyRendererWrapper;
 import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.save.CSVSaveService;
@@ -53,6 +54,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
 import org.apache.jorphan.gui.NumberRenderer;
 import org.apache.jorphan.gui.ObjectTableModel;
+import org.apache.jorphan.gui.ObjectTableSorter;
 import org.apache.jorphan.gui.RateRenderer;
 import org.apache.jorphan.gui.RendererUtils;
 import org.apache.jorphan.reflect.Functor;
@@ -63,7 +65,7 @@ import org.apache.jorphan.reflect.Functor;
  */
 public class SummaryReport extends AbstractVisualizer implements Clearable, ActionListener {
 
-    private static final long serialVersionUID = 240L;
+    private static final long serialVersionUID = 241L;
 
     private static final String USE_GROUP_NAME = "useGroupName"; //$NON-NLS-1$
 
@@ -105,6 +107,8 @@ public class SummaryReport extends AbstractVisualizer implements Clearable, Acti
      * Lock used to protect tableRows update + model update
      */
     private final transient Object lock = new Object();
+
+    private volatile boolean dataChanged;
 
     private final Map<String, Calculator> tableRows = new ConcurrentHashMap<>();
 
@@ -158,10 +162,19 @@ public class SummaryReport extends AbstractVisualizer implements Clearable, Acti
                     new Functor("getAvgPageBytes"),       //$NON-NLS-1$
                 },
                 new Functor[] { null, null, null, null, null, null, null, null , null, null, null },
-                new Class[] { String.class, Long.class, Long.class, Long.class, Long.class,
-                              String.class, String.class, String.class, String.class, String.class, String.class });
+                new Class[] { String.class, Integer.class, Long.class, Long.class, Long.class, 
+                        Double.class, Double.class, Double.class, Double.class, Double.class, Double.class });
         clearData();
         init();
+        new Timer(200, e -> {
+            if (!dataChanged) {
+                return;
+            }
+            dataChanged = false;
+            synchronized (lock) {
+                model.fireTableDataChanged();
+            }
+        }).start();
     }
 
     /**
@@ -182,31 +195,26 @@ public class SummaryReport extends AbstractVisualizer implements Clearable, Acti
     @Override
     public void add(final SampleResult res) {
         final String sampleLabel = res.getSampleLabel(useGroupName.isSelected());
-        JMeterUtils.runSafe(false, new Runnable() {
-            @Override
-            public void run() {
-                Calculator row;
-                synchronized (lock) {
-                    row = tableRows.get(sampleLabel);
-                    if (row == null) {
-                        row = new Calculator(sampleLabel);
-                        tableRows.put(row.getLabel(), row);
-                        model.insertRow(row, model.getRowCount() - 1);
-                    }
-                }
-                /*
-                 * Synch is needed because multiple threads can update the counts.
-                 */
-                synchronized(row) {
-                    row.addSample(res);
-                }
-                Calculator tot = tableRows.get(TOTAL_ROW_LABEL);
-                synchronized(tot) {
-                    tot.addSample(res);
-                }
-                model.fireTableDataChanged();                
+        Calculator row;
+        synchronized (lock) {
+            row = tableRows.get(sampleLabel);
+            if (row == null) {
+                row = new Calculator(sampleLabel);
+                tableRows.put(row.getLabel(), row);
+                model.insertRow(row, model.getRowCount() - 1);
             }
-        });
+        }
+        /*
+         * Synch is needed because multiple threads can update the counts.
+         */
+        synchronized (row) {
+            row.addSample(res);
+        }
+        Calculator tot = tableRows.get(TOTAL_ROW_LABEL);
+        synchronized (tot) {
+            tot.addSample(res);
+        }
+        dataChanged = true;
     }
 
     /**
@@ -221,6 +229,7 @@ public class SummaryReport extends AbstractVisualizer implements Clearable, Acti
             tableRows.put(TOTAL_ROW_LABEL, new Calculator(TOTAL_ROW_LABEL));
             model.addRow(tableRows.get(TOTAL_ROW_LABEL));
         }
+        dataChanged = true;
     }
 
     /**
@@ -239,8 +248,9 @@ public class SummaryReport extends AbstractVisualizer implements Clearable, Acti
         mainPanel.add(makeTitlePanel());
 
         myJTable = new JTable(model);
+        myJTable.setRowSorter(new ObjectTableSorter(model).fixLastRow());
         JMeterUtils.applyHiDPI(myJTable);
-        myJTable.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer());
+        HeaderAsPropertyRendererWrapper.setupDefaultRenderer(myJTable);
         myJTable.setPreferredScrollableViewportSize(new Dimension(500, 70));
         RendererUtils.applyRenderers(myJTable, RENDERERS);
         myScrollPane = new JScrollPane(myJTable);

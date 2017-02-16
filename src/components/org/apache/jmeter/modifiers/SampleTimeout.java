@@ -32,8 +32,8 @@ import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -42,17 +42,15 @@ import org.apache.log.Logger;
  */
 public class SampleTimeout extends AbstractTestElement implements Serializable, ThreadListener, SampleMonitor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private static final Logger LOG = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(SampleTimeout.class);
 
     private static final String TIMEOUT = "InterruptTimer.timeout"; //$NON-NLS-1$
 
     private ScheduledFuture<?> future;
     
     private final transient ScheduledExecutorService execService;
-    
-    private final boolean debug;
 
     private static class TPOOLHolder {
         private TPOOLHolder() {
@@ -75,10 +73,9 @@ public class SampleTimeout extends AbstractTestElement implements Serializable, 
      * No-arg constructor.
      */
     public SampleTimeout() {
-        debug = LOG.isDebugEnabled();
         execService = getExecutorService();
-        if (debug) {
-            LOG.debug(whoAmI("InterruptTimer()", this));
+        if (log.isDebugEnabled()) {
+            log.debug(whoAmI("InterruptTimer()", this));
         }
     }
 
@@ -101,16 +98,16 @@ public class SampleTimeout extends AbstractTestElement implements Serializable, 
 
     @Override
     public void sampleStarting(Sampler sampler) {
-        if (debug) {
-            LOG.debug(whoAmI("sampleStarting()", this));
+        if (log.isDebugEnabled()) {
+            log.debug(whoAmI("sampleStarting()", this));
         }
         createTask(sampler);
     }
 
     @Override
     public void sampleEnded(final Sampler sampler) {
-        if (debug) {
-            LOG.debug(whoAmI("sampleEnded()", this));
+        if (log.isDebugEnabled()) {
+            log.debug(whoAmI("sampleEnded()", this));
         }
         cancelTask();
     }
@@ -130,32 +127,34 @@ public class SampleTimeout extends AbstractTestElement implements Serializable, 
             boolean interrupted = sampler.interrupt();
             String elapsed = Double.toString((double)(System.nanoTime()-start)/ 1000000000)+" secs";
             if (interrupted) {
-                LOG.warn("Call Done interrupting " + getInfo(samp) + " took " + elapsed);
+                if (log.isWarnEnabled()) {
+                    log.warn("Call Done interrupting {} took {}", getInfo(samp), elapsed);
+                }
             } else {
-                if (debug) {
-                    LOG.debug("Call Didn't interrupt: " + getInfo(samp) + " took " + elapsed);
+                if (log.isDebugEnabled()) {
+                    log.debug("Call Didn't interrupt: {} took {}", getInfo(samp), elapsed);
                 }
             }
             return null;
         };
         // schedule the interrupt to occur and save for possible cancellation 
         future = execService.schedule(call, timeout, TimeUnit.MILLISECONDS);
-        if (debug) {
-            LOG.debug("Scheduled timer: @" + System.identityHashCode(future) + " " + getInfo(samp));
+        if (log.isDebugEnabled()) {
+            log.debug("Scheduled timer: @{} {}", System.identityHashCode(future), getInfo(samp));
         }
     }
 
     @Override
     public void threadStarted() {
-        if (debug) {
-            LOG.debug(whoAmI("threadStarted()", this));
+        if (log.isDebugEnabled()) {
+            log.debug(whoAmI("threadStarted()", this));
         }
      }
 
     @Override
     public void threadFinished() {
-        if (debug) {
-            LOG.debug(whoAmI("threadFinished()", this));
+        if (log.isDebugEnabled()) {
+            log.debug(whoAmI("threadFinished()", this));
         }
         cancelTask(); // cancel future if any
      }
@@ -171,7 +170,7 @@ public class SampleTimeout extends AbstractTestElement implements Serializable, 
     }
 
     private String whoAmI(String id, TestElement o) {
-        return id + " @" + System.identityHashCode(o)+ " '"+ o.getName() + "' " + (debug ?  Thread.currentThread().getName() : "");         
+        return id + " @" + System.identityHashCode(o)+ " '"+ o.getName() + "' " + (log.isDebugEnabled() ?  Thread.currentThread().getName() : "");         
     }
 
     private String getInfo(TestElement o) {
@@ -182,8 +181,8 @@ public class SampleTimeout extends AbstractTestElement implements Serializable, 
         if (future != null) {
             if (!future.isDone()) {
                 boolean cancelled = future.cancel(false);
-                if (debug) {
-                    LOG.debug("Cancelled timer: @" + System.identityHashCode(future) + " with result " + cancelled);
+                if (log.isDebugEnabled()) {
+                    log.debug("Cancelled timer: @{}  with result {}", System.identityHashCode(future), cancelled);
                 }
             }
             future = null;

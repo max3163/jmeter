@@ -17,7 +17,9 @@
 
 package org.apache.jmeter.protocol.jms.sampler;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -25,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -34,6 +37,7 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.naming.NamingException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.jms.Utils;
 import org.apache.jmeter.protocol.jms.client.ClientPool;
@@ -47,8 +51,8 @@ import org.apache.jmeter.services.FileServer;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -89,7 +93,7 @@ public class PublisherSampler extends BaseJMSSampler implements TestStateListene
 
     private static final long serialVersionUID = 233L;
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(PublisherSampler.class);
 
     //++ These are JMX file names and must not be changed
     private static final String INPUT_FILE = "jms.input_file"; //$NON-NLS-1$
@@ -165,7 +169,9 @@ public class PublisherSampler extends BaseJMSSampler implements TestStateListene
      *
      */
     private void initClient() throws JMSException, NamingException {
-        publisher = new Publisher(getUseJNDIPropertiesAsBoolean(), getJNDIInitialContextFactory(),
+
+        configureIsReconnectErrorCode();
+        publisher = new Publisher(getUseJNDIPropertiesAsBoolean(), getJNDIInitialContextFactory(), 
                 getProviderUrl(), getConnectionFactory(), getDestination(), isUseAuth(), getUsername(),
                 getPassword(), isDestinationStatic());
         ClientPool.addClient(publisher);
@@ -193,11 +199,8 @@ public class PublisherSampler extends BaseJMSSampler implements TestStateListene
         if (publisher == null) {
             try {
                 initClient();
-            } catch (JMSException e) {
-                result.setResponseMessage(e.toString());
-                return result;
-            } catch (NamingException e) {
-                result.setResponseMessage(e.toString());
+            } catch (JMSException | NamingException e) {
+                handleError(result, e, false);
                 return result;
             }
         }
@@ -241,13 +244,44 @@ public class PublisherSampler extends BaseJMSSampler implements TestStateListene
             result.setSamplerData(buffer.toString());
             result.setSampleCount(loop);
             result.setRequestHeaders(propBuffer.toString());
+        } catch (JMSException e) {
+            handleError(result, e, true);
         } catch (Exception e) {
-            log.error(String.format("Can't sent %s message from %s", type, configChoice), e);
-            result.setResponseMessage(e.toString());
+            handleError(result, e, false);
         } finally {
             result.sampleEnd();
         }
         return result;
+    }
+
+    /**
+     * Fills in result and decide wether to reconnect or not depending on checkForReconnect 
+     * and underlying {@link JMSException#getErrorCode()}
+     * @param result {@link SampleResult}
+     * @param e {@link Exception}
+     * @param checkForReconnect if true and exception is a {@link JMSException}
+     */
+    private void handleError(SampleResult result, Exception e, boolean checkForReconnect) {
+        result.setSuccessful(false);
+        result.setResponseMessage(e.toString());
+
+        if (e instanceof JMSException) {
+            JMSException jms = (JMSException)e;
+
+            String errorCode = Optional.ofNullable(jms.getErrorCode()).orElse("");
+            if (checkForReconnect && publisher != null 
+                    && getIsReconnectErrorCode().test(errorCode)) {
+                ClientPool.removeClient(publisher);
+                IOUtils.closeQuietly(publisher);
+                publisher = null;
+            }
+
+            result.setResponseCode(errorCode);
+        }
+
+        StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer)); // NOSONAR We're getting it to put it in ResponseData 
+        result.setResponseData(writer.toString(), "UTF-8");
     }
 
     protected static Cache<Object, Object> buildCache(String configChoice) {
@@ -262,7 +296,7 @@ public class PublisherSampler extends BaseJMSSampler implements TestStateListene
         Cache<Object, Object> newCache = cacheBuilder.build();
         return newCache;
     }
-
+                	
     /** Gets file path to use **/
     private String getFilePath(String... ext) {
         switch (getConfigChoice()) {

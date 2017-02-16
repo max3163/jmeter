@@ -33,7 +33,9 @@ public final class ActionNames {
     public static final String ADD              = "Add"; // $NON-NLS-1$
     public static final String ADD_ALL          = "add_all"; // $NON-NLS-1$
     public static final String ADD_PARENT       = "Add Parent"; // $NON-NLS-1$
+    public static final String ADD_THINK_TIME_BETWEEN_EACH_STEP    = "Add Think Time between each step"; // $NON-NLS-1$
     public static final String ANALYZE_FILE     = "Analyze File"; // $NON-NLS-1$
+    public static final String APPLY_NAMING_CONVENTION    = "Apply Naming Convention"; // $NON-NLS-1$
     public static final String CHANGE_LANGUAGE  = "change_language"; // $NON-NLS-1$
     public static final String CHANGE_PARENT    = "Change Parent"; // $NON-NLS-1$
     public static final String CHECK_DIRTY      = "check_dirty"; // $NON-NLS-1$
@@ -58,6 +60,7 @@ public final class ActionNames {
     public static final String HEAP_DUMP        = "heap_dump"; // $NON-NLS-1$
     public static final String LAF_PREFIX       = "laf:"; // Look and Feel prefix
     public static final String LOGGER_PANEL_ENABLE_DISABLE     = "logger_panel_enable_disable"; // $NON-NLS-1$
+    public static final String LOG_LEVEL_PREFIX = "loglevel:"; // Logger level prefix
     public static final String MERGE            = "merge"; // $NON-NLS-1$
     public static final String OPEN             = "open"; // $NON-NLS-1$
     public static final String OPEN_RECENT      = "open_recent"; // $NON-NLS-1$
@@ -102,6 +105,8 @@ public final class ActionNames {
     public static final String RUN_TG           = "run_tg"; // $NON-NLS-1$
     public static final String RUN_TG_NO_TIMERS = "run_tg_no_timers"; // $NON-NLS-1$
     public static final String VALIDATE_TG      = "validate_tg"; //$NON-NLS-1$
+    public static final String ZOOM_IN          = "zoom_in"; //$NON-NLS-1$
+    public static final String ZOOM_OUT         = "zoom_out"; //$NON-NLS-1$
 
     // Prevent instantiation
     private ActionNames() {}

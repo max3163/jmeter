@@ -158,8 +158,11 @@ The <code>system.properties</code> file gives more flexibility.</note>
     <note>Note this has some impact on performances, but as GUI mode must not be used for Load Test it is acceptable</note>
     Defaults to: <code>true</code></property>
 <property name="jmeter.loggerpanel.maxlength">
-     Max characters kept in LoggerPanel, <code>0</code> means no limit.<br/>
-     Defaults to: <code>80000</code></property>
+     Max lines kept in LoggerPanel, <code>0</code> means no limit.<br/>
+     Defaults to: <code>1000</code></property>
+<property name="jmeter.loggerpanel.refresh_period">
+    Interval in <code>ms</code> to refresh the log entries in the panel.<br/>
+    Defaults to: <code>500</code></property>
 </properties>
 </section>
 <section name="&sect-num;.5 Toolbar display" anchor="toolbar_display">
@@ -339,96 +342,7 @@ JMETER-SERVER</source>
 </property>
 </properties>
 </section>
-<section name="&sect-num;.9 Logging Configuration" anchor="logging">
-<description>
-    JMeter uses Avalon (Excalibur) LogKit.
-    The Logging Format is described <a href="http://excalibur.apache.org/apidocs/org/apache/log/format/PatternFormatter.html" target="_blank">here</a><br/>
-    Default format:
-    <source>log_format=%{time:yyyy/MM/dd HH:mm:ss} %5.5{priority} - %{category}: %{message} %{throwable}</source>
-    <note><code>\n</code> is automatically added to the end of the string.</note>
-    Predefined formats in the JMeter LoggingManager:
-    <source>#log_format_type=default
-#log_format_type=thread_prefix
-#log_format_type=thread_suffix
-</source>
-    <dl>
-        <dt><code>default</code></dt><dd>is as above.</dd>
-        <dt><code>thread_prefix</code></dt><dd>adds the thread name as a prefix to the category.</dd>
-        <dt><code>thread_suffix</code></dt><dd>adds the thread name as a suffix to the category.</dd>
-    </dl>
-    <note>Thread name is not included by default, as it requires extra processing.</note>
-
-    To change the logging format, define either <code>log_format_type</code> or <code>log_format</code>
-    If both are defined, the type takes precedence.
-    <note>Note that these properties cannot be defined using the <code>-J</code> or <code>-D</code> JMeter
-    command-line flags, as the format will have already been determined by then.
-    However, they can be defined as JVM properties.</note>
-    Logging levels for the logging categories in JMeter.
-    Correct values are:
-    <ul>
-        <li><code>FATAL_ERROR</code></li>
-        <li><code>ERROR</code></li>
-        <li><code>WARN</code></li>
-        <li><code>INFO</code></li>
-        <li><code>DEBUG</code></li>
-    </ul>
-
-    To set the log level for a package or individual class, use:
-<source>
-log_level.[package_name].[classname]=[PRIORITY_LEVEL]
-</source>
-    But omit <code>org.apache</code> from the package name. The classname is optional. Further examples below.
-
-<source>
-log_level.jmeter=INFO
-log_level.jmeter.junit=DEBUG
-log_level.jmeter.control=DEBUG
-log_level.jmeter.testbeans=DEBUG
-log_level.jmeter.engine=DEBUG
-log_level.jmeter.threads=DEBUG
-log_level.jmeter.gui=WARN
-log_level.jmeter.testelement=DEBUG
-log_level.jmeter.util=WARN
-log_level.jmeter.protocol.http=DEBUG
-# For CookieManager, AuthManager etc:
-log_level.jmeter.protocol.http.control=DEBUG
-log_level.jmeter.protocol.ftp=WARN
-log_level.jmeter.protocol.jdbc=DEBUG
-log_level.jmeter.protocol.java=WARN
-log_level.jmeter.testelements.property=DEBUG
-log_level.jorphan=INFO
-</source>
-
-    You can specify a different log file for different categories via:
-    <source>log_file.[category]=[filename]</source>
-    <code>category</code> is equivalent to the package/class names described above.<br/>
-
-    Combined log file (for <code>jmeter</code> and <code>jorphan</code>)
-    <source>log_file=jmeter.log</source>
-
-    To redirect logging to standard output, try the following (it will probably report an error, but output will be to <code>stdout</code>):
-    <source>log_file=</source>
-
-    Or define separate logs if required:
-   <source>log_file.jorphan=jorphan.log
-log_file.jmeter=jmeter.log</source>
-
-    If the filename contains paired single-quotes, then the name is processed as 
-    a <code>SimpleDateFormat</code> format applied to the current date, for example:
-    <source>log_file='jmeter_'yyyyMMddHHmmss'.tmp'</source>
-
-    When JMeter starts, it sets the system property:
-    <code>org.apache.commons.logging.Log</code> to
-    <code>org.apache.commons.logging.impl.LogKitLogger</code>
-    if not already set. This causes Apache and Commons HttpClient to use the same logging as JMeter.<br/>
-
-    Excalibur logging provides the facility to configure logging using configuration files written in XML. This allows for such features as
-    log file rotation, which are not supported directly by JMeter. If such a file is specified, it will be applied to the current logging
-    hierarchy when that has been created.
-    <source>log_config=logkit.xml</source>
-</description>
-</section>
-<section name="&sect-num;.10 HTTP Java configuration" anchor="http_java_config">
+<section name="&sect-num;.9 HTTP Java configuration" anchor="http_java_config">
 <properties>
 <property name="http.java.sampler.retries">
     Number of connection retries performed by HTTP Java sampler before giving up.
@@ -437,7 +351,7 @@ log_file.jmeter=jmeter.log</source>
 </property>
 </properties>
 </section>
-<section name="&sect-num;.11 Commons and Apache HttpClient common properties" anchor="httpclient_common_properties">
+<section name="&sect-num;.10 Commons and Apache HttpClient common properties" anchor="httpclient_common_properties">
 <properties>
 <property name="httpclient.timeout">
     Set the socket timeout (or use the parameter <code>http.socket.timeout</code>) for
@@ -469,7 +383,7 @@ log_file.jmeter=jmeter.log</source>
 </property>
 </properties>
 </section>
-<section name="&sect-num;.12 Kerberos properties" anchor="kerberos">
+<section name="&sect-num;.11 Kerberos properties" anchor="kerberos">
 <properties>
 <property name="kerberos_jaas_application">
     AuthManager Kerberos configuration<br/>
@@ -482,62 +396,65 @@ log_file.jmeter=jmeter.log</source>
 </property>
 </properties>
 </section>
-<section name="&sect-num;.13 Sample logging levels for Commons HttpClient" anchor="log_levels_commons_httpclient">
+<section name="&sect-num;.12 Sample logging levels for Commons HttpClient" anchor="log_levels_commons_httpclient">
 <description>
     Commons HttpClient Logging information can be found at <a href="http://hc.apache.org/httpclient-3.x/logging.html" target="_blank" >Logging</a>
     <note>Note that full category names are used, i.e. must include the <code>org.apache</code>.</note>
     Info level produces no output.<br/>
-    Set debug level:
-    <source>log_level.org.apache.commons.httpclient=debug</source>
+    In log4j2.xml, set debug level:
+    <source>&lt;Logger name="org.apache.commons.httpclient" level="debug" /&gt;</source>
     Might be useful:
-    <source>log_level.org.apache.commons.httpclient.Authenticator=trace</source> 
+    <source>&lt;Logger name="org.apache.commons.httpclient.Authenticator" level="trace" /&gt;</source> 
     Show headers only
-    <source>log_level.httpclient.wire.header=debug</source>
+    <source>&lt;Logger name="org.apache.commons.httpclient.wire.header" level="debug" /&gt;</source>
     Full wire debug produces a lot of output; consider using separate file:
-    <source>
-log_level.httpclient.wire=debug
-log_file.httpclient=httpclient.log
-</source>
+    <source>&lt;Logger name="org.apache.commons.httpclient.wire" level="debug" /&gt;</source>
 </description>
 </section>
-<section name="&sect-num;.14 Apache HttpClient logging examples" anchor="httpclient_logging_examples">
+<section name="&sect-num;.13 Apache HttpClient logging examples" anchor="httpclient_logging_examples">
 <description>
     Enable header wire and context logging - Best for Debugging
+	In log4j2.xml, set:
 <source>
-log_level.org.apache.http=DEBUG
-log_level.org.apache.http.wire=ERROR
+&lt;Logger name="org.apache.http" level="debug" /&gt;
+&lt;Logger name="org.apache.http.wire" level="error" /&gt;
 </source>
     Enable full wire and context logging
-    <source>log_level.org.apache.http=DEBUG</source>
+	In log4j2.xml, set:
+    <source>&lt;Logger name="org.apache.http" level="debug" /&gt;</source>
     Enable context logging for connection management
-    <source>log_level.org.apache.http.impl.conn=DEBUG</source>
+    <source>&lt;Logger name="org.apache.http.impl.conn" level="debug" /&gt;</source>
     Enable context logging for connection management / request execution
 <source>
-log_level.org.apache.http.impl.conn=DEBUG
-log_level.org.apache.http.impl.client=DEBUG
-log_level.org.apache.http.client=DEBUG
+&lt;Logger name="org.apache.http.impl.conn" level="debug" /&gt;
+&lt;Logger name="org.apache.http.impl.client" level="debug" /&gt;
+&lt;Logger name="org.apache.http.client" level="debug" /&gt;
 </source>
 </description>
 </section>
-<section name="&sect-num;.15 Apache HttpComponents HTTPClient configuration (HTTPClient4)" anchor="httpclient4">
+<section name="&sect-num;.14 Apache HttpComponents HTTPClient configuration (HTTPClient4)" anchor="httpclient4">
 <properties>
 <property name="hc.parameters.file">
     Define a properties file for overriding Apache HttpClient parameters.<br/>
     Uncomment this line if you put anything in <code>hc.parameters</code> file.<br/>
     Defaults to: <code>hc.parameters</code>
 </property>
+<property name="httpclient4.auth.preemptive">
+    Preemptively send Authorization Header when BASIC auth is used
+    Defaults to: <code>true</code>
+</property>
 <property name="httpclient4.retrycount">
     Number of retries to attempt.<br/>
     Defaults to: <code>0</code>
 </property>
 <property name="httpclient4.idletimeout">
-    Idle connection timeout (in milliseconds) to apply if the server does not send <code>Keep-Alive</code> headers.<br/>
-    Defaults to: <code>0</code> (no suggested duration for <code>Keep-Alive</code>)
+    Idle connection timeout (in milliseconds) to apply if the server does not send <code>Keep-Alive</code> timeout headers.<br/>
+    Defaults to: <code>0</code> (no suggested duration for <code>Keep-Alived</code> connections)
 </property>
 <property name="httpclient4.validate_after_inactivity">
-    Check connections if the elapsed time (in milliseconds) since the last use of the connection
-    exceeds this value.<br/>
-    Defaults to: <code>2000</code>
+    Check connection if the elapsed time (in milliseconds) since the last use of the connection
+    exceeds this value. Ensure this value is always lower by at least 150 ms than <code>httpclient4.time_to_live</code><br/>
+    Defaults to: <code>1700</code>
 </property>
 <property name="httpclient4.time_to_live">
     <abbr title="time to live">TTL</abbr> (in milliseconds) represents an absolute value.
@@ -551,7 +468,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.16 Apache HttpComponents Commons HTTPClient configuration (HTTPClient 3.1)" anchor="httpclient31">
+<section name="&sect-num;.15 Apache HttpComponents Commons HTTPClient configuration (HTTPClient 3.1)" anchor="httpclient31">
 <properties>
 <property name="httpclient.parameters.file">
     Define a properties file for overriding Commons HttpClient parameters.
@@ -564,7 +481,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.17 HTTP Cache Manager configuration" anchor="cache_maanger">
+<section name="&sect-num;.16 HTTP Cache Manager configuration" anchor="cache_maanger">
 <properties>
 <property name="cacheable_methods">
     Space or comma separated list of methods that can be cached.<br/>
@@ -599,7 +516,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.18 Results file configuration" anchor="results_file_config">
+<section name="&sect-num;.17 Results file configuration" anchor="results_file_config">
 <properties>
 <property name="jmeter.save.saveservice.output_format">
     This section helps determine how result data will be saved.<br/>
@@ -734,7 +651,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.19 Settings that affect SampleResults" anchor="sample_results">
+<section name="&sect-num;.18 Settings that affect SampleResults" anchor="sample_results">
 <properties>
 <property name="sampleresult.timestamp.start">
     Save the start time stamp instead of the end.<br/>
@@ -752,7 +669,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.20 Upgrade" anchor="upgrade">
+<section name="&sect-num;.19 Upgrade" anchor="upgrade">
 <properties>
 <property name="upgrade_properties">
     File that holds a record of name changes for backward compatibility issues.<br/>
@@ -760,7 +677,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.21 JMeter Test Script recorder configuration" anchor="test_script_recorder">
+<section name="&sect-num;.20 JMeter Test Script recorder configuration" anchor="test_script_recorder">
 <properties>
 <property name="proxy.pause">
     <note>N.B. The element was originally called the Proxy recorder, which is why the properties
@@ -776,7 +693,7 @@ log_level.org.apache.http.client=DEBUG
 <property name="proxy.excludes.suggested">
     List of URL patterns that will be added to URL Patterns to exclude.<br/>
     Separate multiple lines with <code>;</code><br/>
-    Defaults to: <code>.*\\.(bmp|css|js|gif|ico|jpe?g|png|swf|woff)</code>
+    Defaults to: <code>.*\\.(bmp|css|js|gif|ico|jpe?g|png|swf|woff|woff2)</code>
 </property>
 <property name="jmeter.httpsampler">
     Change the default HTTP Sampler.<br/>
@@ -836,7 +753,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.22 Test Script Recorder certificate configuration" anchor="test_script_recorder_cert">
+<section name="&sect-num;.21 Test Script Recorder certificate configuration" anchor="test_script_recorder_cert">
 <properties>
 <property name="proxy.cert.directory">
     Defaults to: <em>JMeter <code>bin</code> directory</em>
@@ -871,7 +788,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.23 JMeter Proxy configuration" anchor="proxy_config">
+<section name="&sect-num;.22 JMeter Proxy configuration" anchor="proxy_config">
 <properties>
 <property name="http.proxyDomain">
     Use command-line flags for user-name and password.<br/>
@@ -879,7 +796,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.24 HTML Parser configuration" anchor="parser_config">
+<section name="&sect-num;.23 HTML Parser configuration" anchor="parser_config">
 <properties>
 <property name="HTTPResponse.parsers">
     Space-separated list of parser groups.<br/>
@@ -933,7 +850,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.25 Remote batching configuration" anchor="remote_batching_config">
+<section name="&sect-num;.24 Remote batching configuration" anchor="remote_batching_config">
     <p>
     Configure how SampleResults are sent from server to client when using distributed testing.
     </p>
@@ -1024,7 +941,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.26 JDBC Request configuration" anchor="jdbc_request">
+<section name="&sect-num;.25 JDBC Request configuration" anchor="jdbc_request">
 <properties>
 <property name="jdbcsampler.nullmarker">
     String used to indicate a null value.<br/>
@@ -1036,7 +953,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.27 OS Process Sampler configuration" anchor="os_sampler">
+<section name="&sect-num;.26 OS Process Sampler configuration" anchor="os_sampler">
 <properties>
 <property name="os_sampler.poll_for_timeout">
     Polling to see if process has finished its work, used when a timeout
@@ -1045,7 +962,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.28 TCP Sampler configuration" anchor="tcp_sampler">
+<section name="&sect-num;.27 TCP Sampler configuration" anchor="tcp_sampler">
 <properties>
 <property name="tcp.handler">
     The default handler class.<br/>
@@ -1076,7 +993,7 @@ log_level.org.apache.http.client=DEBUG
     Defaults to: <code>2</code></property>
 </properties>
 </section>
-<section name="&sect-num;.29 Summariser - Generate Summary Results - configuration (mainly applies to non-GUI mode)" anchor="summariser">
+<section name="&sect-num;.28 Summariser - Generate Summary Results - configuration (mainly applies to non-GUI mode)" anchor="summariser">
 <properties>
 <property name="summariser.name">
     Comment the following property to disable the default non-GUI summariser.<br/>
@@ -1102,7 +1019,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.30 Aggregate Report and Aggregate Graph - configuration" anchor="aggregate_report_graph">
+<section name="&sect-num;.29 Aggregate Report and Aggregate Graph - configuration" anchor="aggregate_report_graph">
 <properties>
 <property name="aggregate_rpt_pct1">
     Percentiles to display in reports.<br/>
@@ -1122,16 +1039,52 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.31 BackendListener - configuration" anchor="backend">
+<section name="&sect-num;.30 BackendListener - configuration" anchor="backend">
 <properties>
+<property name="backend_graphite.send_interval">
+    Send interval in seconds.<br/>
+    Defaults to: <code>1</code> second
+</property>
+<property name="backend_influxdb.send_interval">
+    Send interval in seconds.<br/>
+    Defaults to: <code>5</code> seconds
+</property>
+<property name="backend_influxdb.connection_timeout">
+    InfluxDB connection timeout.<br/>
+    Defaults to: <code>1000</code> millis
+</property>
+<property name="backend_influxdb.socket_timeout">
+    InfluxDB socket read timeout.<br/>
+    Defaults to: <code>3000</code> millis
+</property>
+<property name="backend_influxdb.connection_request_timeout">
+    InfluxDB timeout to get a connection.<br/>
+    Defaults to: <code>100</code> millis
+</property>
 <property name="backend_metrics_window">
     Backend metrics sliding window size for <code>Percentiles</code>, <code>Min</code>
     and <code>Max</code>.<br/>
     Defaults to: <code>100</code>
 </property>
+<property name="backend_metrics_large_window">
+    Backend metrics sliding window size  for <code>Percentiles</code>, <code>Min</code> 
+    and <code>Max</code>. when <code>backend_metrics_window_mode=timed</code><br/>
+    Setting this value too high can lead to OOM Backend metrics sliding window size 
+    Defaults to: <code>5000</code>
+</property>
+
+<property name="backend_metrics_window_mode">
+    Backend metrics window mode.
+    Possible values:
+    <ul>
+        <li><code>fixed</code> : fixed-size window</li>
+        <li><code>timed</code> : time boxed</li>
+    </ul>
+    Defaults to: <code>fixed</code>
+</property>
 </properties>
 </section>
-<section name="&sect-num;.32 BeanShell configuration" anchor="beanshell">
+<section name="&sect-num;.31 BeanShell configuration" anchor="beanshell">
 <properties>
 <property name="beanshell.server.port">
     BeanShell Server properties.<br/>
@@ -1176,7 +1129,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.33 MailerModel configuration" anchor="mailer">
+<section name="&sect-num;.32 MailerModel configuration" anchor="mailer">
 <properties>
 <property name="mailer.successlimit">
     The file <code>BeanShellListeners.bshrc</code> contains sample definitions
@@ -1190,7 +1143,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.34 CSVRead configuration" anchor="csv">
+<section name="&sect-num;.33 CSVRead configuration" anchor="csv">
 <properties>
 <property name="csvread.delimiter">
     CSVRead delimiter setting (default "<code>,</code>").<br/>
@@ -1200,7 +1153,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.35 __time() function configuration" anchor="time">
+<section name="&sect-num;.34 __time() function configuration" anchor="time">
 <properties>
 <property name="time.YMD">
     This and the following properties can be used to redefine the default time formats.<br/>
@@ -1220,7 +1173,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.36 CSV DataSet configuration" anchor="csv_dataset">
+<section name="&sect-num;.35 CSV DataSet configuration" anchor="csv_dataset">
 <properties>
 <property name="csvdataset.eofstring">
     String to return at <abbr title="end of file"><code>EOF</code></abbr> (if recycle not used).<br/>
@@ -1228,7 +1181,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.37 LDAP Sampler configuration" anchor="ldap">
+<section name="&sect-num;.36 LDAP Sampler configuration" anchor="ldap">
 <properties>
 <property name="ldapsampler.max_sorted_results">
     Maximum number of search results returned by a search that will be sorted
@@ -1256,7 +1209,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.38 Miscellaneous configuration" anchor="miscellaneous">
+<section name="&sect-num;.37 Miscellaneous configuration" anchor="miscellaneous">
 <properties>
 <property name="monitor.buffer.size">
     To set the Monitor Health Visualiser buffer size, enter the desired value.<br/>
@@ -1362,11 +1315,11 @@ log_level.org.apache.http.client=DEBUG
     Defaults to: <code>cookies</code>
 </property>
 <property name="javascript.use_rhino">
-    Ability to switch to Nashorn as default Javascript Engine used by <code>IfController</code>
+    Ability to switch to Rhino as default Javascript Engine used by <code>IfController</code>
     and <code>__javaScript</code> function.<br/>
-    <note>JMeter will prefer to use Rhino even if it detects a JRE 8 or higher.
-    If you want to use Nashorn, set this value to <code>false</code></note>
-    Defaults to: <code>true</code>
+    <note>JMeter uses Nashorn since 3.2 version.
+    If you want to use Rhino, set this value to <code>true</code></note>
+    Defaults to: <code>false</code>
 </property>
 <property name="jmeterengine.threadstop.wait">
     Number of milliseconds to wait for a thread to stop.<br/>
@@ -1443,6 +1396,15 @@ log_level.org.apache.http.client=DEBUG
     for the Console Logger panel.<br/>
     Defaults to: <code>true</code>
 </property>
+<property name="view.results.tree.update_period">
+    Period after which the results tree should be refreshed<br/>
+    Defaults to: <code>500</code> millis
+</property>
+<property name="view.results.tree.max_results">
+    Maximum number of main samples, that should be stored and displayed.<br/>
+    A value of <code>0</code> will store all results. This might consume a lot of memory.<br/>
+    Defaults to: <code>500</code>
+</property>
 <property name="view.results.tree.max_size">
     Maximum size (in bytes) of HTML page that can be displayed.<br/>
     Set to zero to disable the size check and display the whole response.<br/>
@@ -1456,6 +1418,9 @@ log_level.org.apache.http.client=DEBUG
     Defaults to:
     <source>.RenderAsText,.RenderAsRegexp,.RenderAsCssJQuery,.RenderAsXPath,.RenderAsHTML,.RenderAsHTMLWithEmbedded,.RenderAsDocument,.RenderAsJSON,.RenderAsXML</source>
 </property>
+<property name="view.results.tree.refresh_period">
+    Interval in <code>ms</code> after which the results should be updated.<br/>
+    Defaults to: <code>500</code></property>
 <property name="document.max_size">
     Maximum size (in bytes) of Document that can be parsed by Tika engine<br/>
     Set to zero to disable the size check.<br/>
@@ -1479,7 +1444,7 @@ log_level.org.apache.http.client=DEBUG
     Defaults to: <code>100</code></property>
 </properties>
 </section>
-<section name="&sect-num;.39 Classpath configuration" anchor="classpath">
+<section name="&sect-num;.38 Classpath configuration" anchor="classpath">
 <properties>
 <property name="search_paths">
     List of directories (separated by <code>;</code>) to search for additional
@@ -1523,7 +1488,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.40 Reporting configuration" anchor="reporting">
+<section name="&sect-num;.39 Reporting configuration" anchor="reporting">
 <properties>
 <property name="jmeter.reportgenerator.apdex_satisfied_threshold">
     Sets the satisfaction threshold for the APDEX calculation (in milliseconds).<br/>
@@ -1720,9 +1685,21 @@ log_level.org.apache.http.client=DEBUG
     Indicates whether only controller samples are displayed on graphs that support it.<br/>
     Defaults to: <code>false</code>
 </property>
+<property name="jmeter.reportgenerator.date_format">
+    Date format of report using by start_date and end_date properties.<br/>
+    Defaults to: <code>yyyyMMddHHmmss</code>
+</property>
+<property name="jmeter.reportgenerator.start_date">
+    Start date of report using date_format property.<br/>
+    Defaults to: nothing
+</property>
+<property name="jmeter.reportgenerator.end_date">
+    End date of report using date_format property.<br/>
+    Defaults to: nothing
+</property>
 </properties>
 </section>
-<section name="&sect-num;.41 Additional property files to load" anchor="properties">
+<section name="&sect-num;.40 Additional property files to load" anchor="properties">
 <properties>
 <property name="user.properties">
     Should JMeter automatically load additional JMeter properties?<br/>
@@ -1741,7 +1718,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.42 Thread Group Validation feature" anchor="validation">
+<section name="&sect-num;.41 Thread Group Validation feature" anchor="validation">
 <description>Validation is the name of the feature used to rapidly validate a Thread Group runs fine</description>
 <properties>
 <property name="testplan_validation.tree_cloner_class">
@@ -1760,6 +1737,10 @@ log_level.org.apache.http.client=DEBUG
     Ignore timers when validating the thread group of plan.<br/>
     Defaults to: <code>true</code>
 </property>
+<property name="testplan_validation.ignore_backends">
+    Ignore BackendListener when validating the thread group of plan.<br/>
+    Defaults to: <code>true</code>
+</property>
 <property name="testplan_validation.number_iterations">
     Number of iterations to use to validate a Thread Group.<br/>
     Defaults to: <code>1</code>
@@ -1770,7 +1751,7 @@ log_level.org.apache.http.client=DEBUG
 </property>
 </properties>
 </section>
-<section name="&sect-num;.43 Timer related feature" anchor="timer">
+<section name="&sect-num;.42 Timer related feature" anchor="timer">
 <description>Timer are used to introduce think time in your plan.</description>
 <properties>
 <property name="timer.factor">
@@ -1782,9 +1763,48 @@ log_level.org.apache.http.client=DEBUG
     </ul>
     Defaults to: <code>1.0f</code>
 </property>
+<property name="think_time_creator.impl">
+    Default implementation that create the Timer structure to add to Test Plan. 
+    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/thinktime/ThinkTimeCreator.html"><code>org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator</code></a>
+    Defaults to: <a href="../api/org/apache/jmeter/thinktime/DefaultThinkTimeCreator.html"><code>org.apache.jmeter.thinktime.DefaultThinkTimeCreator</code></a>
+</property>
+<property name="think_time_creator.default_timer_implementation">
+    Default Timer GUI class added to Test Plan by DefaultThinkTimeCreator
+    Defaults to: <a href="../api/org/apache/jmeter/timers/gui/UniformRandomTimerGui.html"><code>org.apache.jmeter.timers.gui.UniformRandomTimerGui</code></a>
+</property>
+<property name="think_time_creator.default_constant_pause">
+    Default constant pause of Timer
+    Defaults to: <code>1000</code>
+</property>
+<property name="think_time_creator.default_range">
+    Default range pause of Timer
+    Defaults to: <code>100</code>
+</property>
 </properties>
 <a href="#">^</a>
 </section>
+
+<section name="&sect-num;.43 Naming Policy" anchor="naming_policy">
+<description>Timer are used to introduce think time in your plan.</description>
+<properties>
+<property name="naming_policy.prefix">
+    Prefix used when naming elements.
+    Defaults to empty prefix
+</property>
+<property name="naming_policy.suffix">
+    Prefix used when naming elements.
+    Defaults to empty suffix
+</property>
+<property name="naming_policy.impl">
+    Implementation of interface <a href="../api/org/apache/jmeter/gui/action/TreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.TreeNodeNamingPolicy</code></a>
+    Default implementation that create the Timer structure to add to Test Plan. 
+    Implementation of interface org.apache.jmeter.gui.action.thinktime.ThinkTimeCreator
+    Defaults to: <a href="../api/org/apache/jmeter/gui/action/impl/DefaultTreeNodeNamingPolicy.html"><code>org.apache.jmeter.gui.action.impl.DefaultTreeNodeNamingPolicy</code></a>
+</property>
+</properties>
+<a href="#">^</a>
+</section>
+
 <!-- 
 <section name="&sect-num;.10 Reports" anchor="Reports">
 <description>

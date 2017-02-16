@@ -51,15 +51,16 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.LocaleChangeEvent;
 import org.apache.jmeter.util.LocaleChangeListener;
 import org.apache.jmeter.util.SSLManager;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.reflect.ClassFinder;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
-    private static final long serialVersionUID = 240L;
+    private static final long serialVersionUID = 241L;
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(JMeterMenuBar.class);
 
     private JMenu fileMenu;
 
@@ -81,7 +82,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
 
     private JMenuItem fileExit;
 
-    private JMenuItem fileClose;
+    private JMenuItem fileNew;
 
     private JMenu editMenu;
 
@@ -243,23 +244,19 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
                     new Class[] {MenuCreator.class });
             for (String strClassName : listClasses) {
                 try {
-                    if(log.isDebugEnabled()) {
-                        log.debug("Loading menu creator class: "+ strClassName);
-                    }
+                    log.debug("Loading menu creator class: {}", strClassName);
                     Class<?> commandClass = Class.forName(strClassName);
                     if (!Modifier.isAbstract(commandClass.getModifiers())) {
-                        if(log.isDebugEnabled()) {
-                            log.debug("Instantiating: "+ commandClass.getName());
-                        }
+                        log.debug("Instantiating: {}", commandClass);
                         MenuCreator creator = (MenuCreator) commandClass.newInstance();
                         menuCreators.add(creator);
                     }
                 } catch (Exception e) {
-                    log.error("Exception registering "+MenuCreator.class.getName() + " with implementation:"+strClassName, e);
+                    log.error("Exception registering {} with implementation: {}", MenuCreator.class, strClassName, e);
                 }
             }
         } catch (IOException e) {
-            log.error("Exception finding implementations of "+MenuCreator.class, e);
+            log.error("Exception finding implementations of {}", MenuCreator.class, e);
         }
 
         makeFileMenu();
@@ -333,7 +330,20 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
             guiInstance.setMenuItemLoggerPanel(menuLoggerPanel);
         }
         optionsMenu.add(menuLoggerPanel);
-        
+
+        JMenu menuLoggerLevel = makeMenuRes("menu_logger_level"); //$NON-NLS-1$
+        JMenuItem menuItem;
+        String levelString;
+        for (Level level : Level.values()) {
+            levelString = level.toString();
+            menuItem = new JMenuItem(levelString);
+            menuItem.addActionListener(ActionRouter.getInstance());
+            menuItem.setActionCommand(ActionNames.LOG_LEVEL_PREFIX + levelString);
+            menuItem.setToolTipText(levelString); // show the classname to the user
+            menuLoggerLevel.add(menuItem);
+        }
+        optionsMenu.add(menuLoggerLevel);
+
         if (SSLManager.isSSLSupported()) {
             sslManager = makeMenuItemRes("sslmanager", 'S', ActionNames.SSL_MANAGER, KeyStrokes.SSL_MANAGER); //$NON-NLS-1$
             optionsMenu.add(sslManager);
@@ -345,6 +355,11 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
 
         JMenuItem expand = makeMenuItemRes("menu_expand_all", ActionNames.EXPAND_ALL, KeyStrokes.EXPAND_ALL); //$NON-NLS-1$
         optionsMenu.add(expand);
+
+        JMenuItem zoomIn = makeMenuItemRes("menu_zoom_in", ActionNames.ZOOM_IN); //$NON-NLS-1$
+        optionsMenu.add(zoomIn);
+        JMenuItem zoomOut = makeMenuItemRes("menu_zoom_out", ActionNames.ZOOM_OUT); //$NON-NLS-1$
+        optionsMenu.add(zoomOut);
 
         addPluginsMenuItems(optionsMenu, menuCreators, MENU_LOCATION.OPTIONS);
     }
@@ -396,7 +411,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         if (addedLocales != null){
             String [] addLanguages =addedLocales.split(","); // $NON-NLS-1$
             for(String newLang : addLanguages){
-                log.info("Adding locale "+newLang);
+                log.info("Adding locale {}", newLang);
                 lang.add(newLang);
             }
         }
@@ -512,16 +527,16 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
         templates = makeMenuItemRes("template_menu", 'T', ActionNames.TEMPLATES); //$NON-NLS-1$
         templates.setEnabled(true);
 
-        fileClose = makeMenuItemRes("menu_close", 'C', ActionNames.CLOSE, KeyStrokes.CLOSE); //$NON-NLS-1$
+        fileNew = makeMenuItemRes("new", 'N', ActionNames.CLOSE, KeyStrokes.CLOSE); //$NON-NLS-1$
 
         fileExit = makeMenuItemRes("exit", 'X', ActionNames.EXIT, KeyStrokes.EXIT); //$NON-NLS-1$
 
         fileMerge = makeMenuItemRes("menu_merge", 'M', ActionNames.MERGE); //$NON-NLS-1$
         fileMerge.setEnabled(false);
 
-        fileMenu.add(fileClose);
-        fileMenu.add(fileLoad);
+        fileMenu.add(fileNew);
         fileMenu.add(templates);
+        fileMenu.add(fileLoad);
         fileMenu.add(fileMerge);
         fileMenu.addSeparator();
         fileMenu.add(fileSave);
@@ -577,7 +592,7 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
     }
     
     public void setRunning(boolean running, String host) {
-        log.info("setRunning(" + running + "," + host + ")");
+        log.info("setRunning({}, {})", running, host);
         if(org.apache.jmeter.gui.MainFrame.LOCAL.equals(host)) {
             return;
         }
@@ -591,19 +606,27 @@ public class JMeterMenuBar extends JMenuBar implements LocaleChangeListener {
             JMenuItem exit = iter3.next();
             JMenuItem shut = iter4.next();
             if (start.getText().equals(host)) {
-                log.debug("Found start host: " + start.getText());
+                if (log.isDebugEnabled()) {
+                    log.debug("Found start host: {}", start.getText());
+                }
                 start.setEnabled(!running);
             }
             if (stop.getText().equals(host)) {
-                log.debug("Found stop  host: " + stop.getText());
+                if (log.isDebugEnabled()) {
+                    log.debug("Found stop  host: {}", stop.getText());
+                }
                 stop.setEnabled(running);
             }
             if (exit.getText().equals(host)) {
-                log.debug("Found exit  host: " + exit.getText());
+                if (log.isDebugEnabled()) {
+                    log.debug("Found exit  host: {}", exit.getText());
+                }
                 exit.setEnabled(true);
             }
             if (shut.getText().equals(host)) {
-                log.debug("Found exit  host: " + exit.getText());
+                if (log.isDebugEnabled()) {
+                    log.debug("Found shut  host: {}", exit.getText());
+                }
                 shut.setEnabled(running);
             }
         }

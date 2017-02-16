@@ -21,6 +21,7 @@ package org.apache.jmeter.protocol.http.sampler;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
@@ -57,6 +58,7 @@ import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.NTCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
@@ -92,7 +94,9 @@ import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.AbstractHttpClient;
+import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.DefaultClientConnectionReuseStrategy;
 import org.apache.http.impl.client.DefaultConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -113,6 +117,8 @@ import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.CharArrayBuffer;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.AuthManager;
+import org.apache.jmeter.protocol.http.control.AuthManager.Mechanism;
+import org.apache.jmeter.protocol.http.control.Authorization;
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -131,8 +137,8 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.util.JsseSSLManager;
 import org.apache.jmeter.util.SSLManager;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * HTTP Sampler using Apache HttpClient 4.x.
@@ -142,7 +148,7 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
 
     private static final int MAX_BODY_RETAIN_SIZE = JMeterUtils.getPropDefault("httpclient4.max_body_retain_size", 32 * 1024);
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(HTTPHC4Impl.class);
 
     /** retry count to be used (default 0); 0 = disable retries */
     private static final int RETRY_COUNT = JMeterUtils.getPropDefault("httpclient4.retrycount", 0);
@@ -150,9 +156,12 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
     /** Idle timeout to be applied to connections if no Keep-Alive header is sent by the server (default 0 = disable) */
     private static final int IDLE_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.idletimeout", 0);
     
-    private static final int VALIDITY_AFTER_INACTIVITY_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.validate_after_inactivity", 2000);
+    private static final int VALIDITY_AFTER_INACTIVITY_TIMEOUT = JMeterUtils.getPropDefault("httpclient4.validate_after_inactivity", 1700);
     
     private static final int TIME_TO_LIVE = JMeterUtils.getPropDefault("httpclient4.time_to_live", 2000);
+
+    /** Preemptive Basic Auth */
+    private static final boolean BASIC_AUTH_PREEMPTIVE = JMeterUtils.getPropDefault("httpclient4.auth.preemptive", true);
 
     private static final String CONTEXT_METRICS = "jmeter_metrics"; // TODO hack for metrics related to HTTPCLIENT-1081, to be removed later
     
@@ -353,8 +362,9 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
                 // Some servers fail if Content-Length is equal to 0
                 // so to avoid this we use HttpGet when there is no body (Content-Length will not be set)
                 // otherwise we use HttpGetWithEntity
-                if ( (!hasArguments() && getSendFileAsPostBody()) 
-                        || getSendParameterValuesAsPostBody() ) {
+                if ( !areFollowingRedirect 
+                        && ((!hasArguments() && getSendFileAsPostBody()) 
+                        || getSendParameterValuesAsPostBody()) ) {
                     httpRequest = new HttpGetWithEntity(uri);
                 } else {
                     httpRequest = new HttpGet(uri);
@@ -621,22 +631,29 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
         AuthManager authManager = getAuthManager();
         if (authManager != null) {
             Subject subject = authManager.getSubjectForUrl(url);
-            if(subject != null) {
+            if (subject != null) {
                 try {
                     return Subject.doAs(subject,
-                            new PrivilegedExceptionAction<HttpResponse>() {
-    
-                                @Override
-                                public HttpResponse run() throws Exception {
-                                    return httpClient.execute(httpRequest,
-                                            localContext);
-                                }
-                            });
+                            (PrivilegedExceptionAction<HttpResponse>) () ->
+                                    httpClient.execute(httpRequest, localContext));
                 } catch (PrivilegedActionException e) {
-                    log.error(
-                            "Can't execute httpRequest with subject:"+subject,
-                            e);
-                    throw new RuntimeException("Can't execute httpRequest with subject:"+subject, e);
+                    log.error("Can't execute httpRequest with subject:" + subject, e);
+                    throw new RuntimeException("Can't execute httpRequest with subject:" + subject, e);
+                }
+            }
+
+            if(BASIC_AUTH_PREEMPTIVE) {
+                Authorization authorization = authManager.getAuthForURL(url);
+                if(authorization != null && Mechanism.BASIC_DIGEST.equals(authorization.getMechanism())) {
+                    HttpHost target = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
+                    // Create AuthCache instance
+                    AuthCache authCache = new BasicAuthCache();
+                    // Generate BASIC scheme object and 
+                    // add it to the local auth cache
+                    BasicScheme basicAuth = new BasicScheme();
+                    authCache.put(target, basicAuth);
+                    // Add AuthCache to the execution context
+                    localContext.setAttribute(HttpClientContext.AUTH_CACHE, authCache);
                 }
             }
         }
@@ -1463,8 +1480,10 @@ public class HTTPHC4Impl extends HTTPHCAbstractImpl {
             if(entityEntry.isRepeatable()) {
                 entityBody = new StringBuilder(1000);
                 // FIXME Charset
-                entityBody.append(IOUtils.toString(new BoundedInputStream(
-                        entityEntry.getContent(), MAX_BODY_RETAIN_SIZE)));
+                try (InputStream in = entityEntry.getContent();
+                        InputStream bounded = new BoundedInputStream(in, MAX_BODY_RETAIN_SIZE)) {
+                    entityBody.append(IOUtils.toString(bounded));
+                }
                 if (entityEntry.getContentLength() > MAX_BODY_RETAIN_SIZE) {
                     entityBody.append("<actual file content shortened>");
                 }

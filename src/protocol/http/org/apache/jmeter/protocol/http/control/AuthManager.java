@@ -39,6 +39,7 @@ import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.jmeter.config.ConfigElement;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -50,9 +51,9 @@ import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // For Unit tests, @see TestAuthManager
 
@@ -63,9 +64,9 @@ import org.apache.log.Logger;
  *
  */
 public class AuthManager extends ConfigTestElement implements TestStateListener, TestIterationListener, Serializable {
-    private static final long serialVersionUID = 234L;
+    private static final long serialVersionUID = 235L;
 
-    private static final Logger log = LoggingManager.getLoggerForClass();
+    private static final Logger log = LoggerFactory.getLogger(AuthManager.class);
 
     private static final String CLEAR = "AuthManager.clearEachIteration";// $NON-NLS-1$
 
@@ -470,7 +471,7 @@ public class AuthManager extends ConfigTestElement implements TestStateListener,
             if (Mechanism.KERBEROS.equals(auth.getMechanism())) {
                 ((AbstractHttpClient) client).getAuthSchemes().register(
                         AuthSchemes.SPNEGO,
-                        new FixedSPNegoSchemeFactory(isStripPort(url)));
+                        new SPNegoSchemeFactory(isStripPort(url)));
                 credentialsProvider.setCredentials(new AuthScope(null, -1, null), USE_JAAS_CREDENTIALS);
             } else {
                 credentialsProvider.setCredentials(
