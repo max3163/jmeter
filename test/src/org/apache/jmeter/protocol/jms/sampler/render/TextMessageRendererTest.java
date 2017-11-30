@@ -78,7 +78,7 @@ public class TextMessageRendererTest extends MessageRendererTest<String> {
     @Test
     public void checkNoVariable() {
         jmeterCtxService.get().getVariables().put("oneVar", "RAW");
-        assertValueFromFile(format("${oneVar}%n"), "oneVar.txt", false);
+        assertValueFromFile(format("${oneVar}"), "oneVar.txt", false);
     }
 
     @Test
