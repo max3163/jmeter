@@ -23,7 +23,6 @@ import javax.jms.Message;
 
 /**
  * Executor for (pseudo) synchronous communication. <br>
- * Created on: October 28, 2004
  *
  */
 public interface QueueExecutor {
@@ -43,4 +42,9 @@ public interface QueueExecutor {
             int priority, 
             long expiration) throws JMSException;
 
+    /**
+     * Close the resources
+     * @throws JMSException
+     */
+    void close() throws JMSException;
 }

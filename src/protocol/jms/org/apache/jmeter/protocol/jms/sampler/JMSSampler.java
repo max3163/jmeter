@@ -43,6 +43,7 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.jms.Utils;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -276,17 +277,18 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
             sampleTries++;
         } while ((result != null) && (sampleTries < getNumberOfSamplesToAggregateAsInt()));
 
-        res.setResponseMessage(sampleCounter + " samples messages received");
         res.setResponseData(buffer.toString(), StandardCharsets.UTF_8.name());
         res.setResponseHeaders(propBuffer.toString());
         if (sampleCounter == 0) {
-            res.setResponseCode("404");
             res.setSuccessful(false);
+            res.setResponseCode("404");
+            res.setResponseMessage(sampleCounter + " samples messages received, last try had following response message:"+
+                    res.getResponseMessage());
         } else {
-            res.setResponseCodeOK();
             res.setSuccessful(true);
+            res.setResponseCodeOK();
+            res.setResponseMessage(sampleCounter + " message(s) received successfully");
         }
-        res.setResponseMessage(sampleCounter + " message(s) received successfully");
         res.setSamplerData(getNumberOfSamplesToAggregateAsInt() + " messages expected");
         res.setSampleCount(sampleCounter);
     }
@@ -327,10 +329,10 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
         try {
             queueName = queue.getQueueName();
             consumer = session.createReceiver(queue, jmsSelector);
-            reply = consumer.receive(Long.valueOf(getTimeout()));
+            reply = consumer.receive(getTimeoutAsInt());
             LOGGER.debug("Message: {}", reply);
             if (reply != null) {
-                res.setResponseMessage("1 message(s) received successfully");
+                res.setResponseMessage("1 message received successfully");
                 res.setResponseHeaders(reply.toString());
                 TextMessage msg = (TextMessage) reply;
                 retVal = msg.getText();
@@ -339,9 +341,10 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
                 res.setResponseMessage("No message received");
             }
         } catch (Exception ex) {
-            res.setResponseMessage("Error browsing queue "+queueName+" with selector "
-                    + jmsSelector+ ", message:"+ex.getMessage());
-            LOGGER.error("Error browsing queue {} with selector {}", queueName, jmsSelector, ex);
+            res.setResponseMessage("Error browsing queue '"+queueName+"' with selector '"
+                    + jmsSelector+ "', timeout '"+getTimeout()+"', message:"+ex.getMessage());
+            LOGGER.error("Error browsing queue {} with selector {} and configured timeout {}", queueName, jmsSelector, 
+                    getTimeout(), ex);
         } finally {
             Utils.close(consumer, LOGGER);
         }
@@ -676,7 +679,7 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
                 producer.setTimeToLive(Long.parseLong(getExpiration()));
             } else {
                 if (useTemporyQueue()) {
-                    executor = new TemporaryQueueExecutor(session, sendQueue);
+                    executor = new TemporaryQueueExecutor(session, sendQueue, getTimeoutAsInt());
                 } else {
                     producer = session.createSender(sendQueue);
                     executor = new FixedQueueExecutor(producer, getTimeoutAsInt(), isUseReqMsgIdAsCorrelId());
@@ -753,10 +756,12 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
     }
 
     private int getTimeoutAsInt() {
-        if (getPropertyAsInt(TIMEOUT) < 1) {
+        String propAsString = getPropertyAsString(TIMEOUT);
+        if(StringUtils.isEmpty(propAsString)){
             return DEFAULT_TIMEOUT;
+        } else {
+            return Integer.parseInt(propAsString);
         }
-        return getPropertyAsInt(TIMEOUT);
     }
 
     public String getTimeout() {
@@ -793,6 +798,13 @@ public class JMSSampler extends AbstractSampler implements ThreadListener {
                 context.close();
             } catch (NamingException ignored) {
                 // ignore
+            }
+        }
+        if (executor != null) {
+            try {
+                executor.close();
+            } catch (JMSException e) {
+                LOGGER.error("Error closing executor {}", executor.getClass(), e);
             }
         }
         Utils.close(session, LOGGER);
