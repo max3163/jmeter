@@ -18,16 +18,13 @@
 
 package org.apache.jorphan.io;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.io.Writer;
+import java.nio.file.Files;
 
 import org.apache.jorphan.util.JOrphanUtils;
 import org.slf4j.Logger;
@@ -133,35 +130,14 @@ public class TextFile extends File {
      * @return the content of the file
      */
     public String getText() {
-        String lineEnd = System.getProperty("line.separator"); //$NON-NLS-1$
-        StringBuilder sb = new StringBuilder();
-        Reader reader = null;
-        BufferedReader br = null;
-        FileInputStream fileInputStream = null;
+        String content = "";
         try {
-            fileInputStream = new FileInputStream(this);
-            if (encoding == null) {
-                reader = new InputStreamReader(fileInputStream);                
-            } else {
-                reader = new InputStreamReader(fileInputStream, encoding);
-            }
-            br = new BufferedReader(reader);
-            String line = "NOTNULL"; //$NON-NLS-1$
-            while (line != null) {
-                line = br.readLine();
-                if (line != null) {
-                    sb.append(line + lineEnd);
-                }
-            }
+            byte[] bytes = Files.readAllBytes(this.toPath());
+            content = (encoding == null) ? new String(bytes) : new String(bytes, encoding); 
         } catch (IOException ioe) {
             log.error("", ioe); //$NON-NLS-1$
-        } finally {
-            JOrphanUtils.closeQuietly(br);
-            JOrphanUtils.closeQuietly(reader); 
-            JOrphanUtils.closeQuietly(fileInputStream); 
         }
-
-        return sb.toString();
+        return content;
     }
 
     /**
