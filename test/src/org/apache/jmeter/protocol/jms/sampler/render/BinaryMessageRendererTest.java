@@ -76,7 +76,7 @@ public class BinaryMessageRendererTest extends MessageRendererTest<byte[]> {
 
     @Test
     public void getValueFromFile_withNoVar() {
-        String text = format("éè€%n");
+        String text = format("éè€");
         assertValueFromFile(text, "utf8.txt", true);
         assertCacheContentInString(text);
 
@@ -86,8 +86,8 @@ public class BinaryMessageRendererTest extends MessageRendererTest<byte[]> {
     public void getValueFromFile_withOneVar() {
         String value = "éè€";
         jmeterCtxService.get().getVariables().put("oneVar", value);
-        assertValueFromFile(format("%s%n", value), "oneVar.txt", true);
-        assertCacheContentInString(format("${oneVar}%n"));
+        assertValueFromFile(format("%s", value), "oneVar.txt", true);
+        assertCacheContentInString(format("${oneVar}"));
     }
 
 
