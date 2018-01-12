@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.AbstractScopedAssertion;
 import org.apache.jmeter.testelement.property.CollectionProperty;
@@ -40,8 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test element to handle Response Assertions, @see AssertionGui
- * see org.apache.jmeter.assertions.ResponseAssertionTest for unit tests
+ * Test element to handle Response Assertions.
+ * See {@link AssertionGui} for GUI.
  */
 public class ResponseAssertion extends AbstractScopedAssertion implements Serializable, Assertion {
     private static final Logger log = LoggerFactory.getLogger(ResponseAssertion.class);
@@ -53,41 +54,27 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
     // Values for TEST_FIELD
     // N.B. we cannot change the text value as it is in test plans
     private static final String SAMPLE_URL = "Assertion.sample_label"; // $NON-NLS-1$
-
     private static final String RESPONSE_DATA = "Assertion.response_data"; // $NON-NLS-1$
-
     private static final String RESPONSE_DATA_AS_DOCUMENT = "Assertion.response_data_as_document"; // $NON-NLS-1$
-
     private static final String RESPONSE_CODE = "Assertion.response_code"; // $NON-NLS-1$
-
     private static final String RESPONSE_MESSAGE = "Assertion.response_message"; // $NON-NLS-1$
-
     private static final String RESPONSE_HEADERS = "Assertion.response_headers"; // $NON-NLS-1$
-    
     private static final String REQUEST_HEADERS = "Assertion.request_headers"; // $NON-NLS-1$
-    
     private static final String REQUEST_DATA = "Assertion.request_data"; // $NON-NLS-1$
-
     private static final String ASSUME_SUCCESS = "Assertion.assume_success"; // $NON-NLS-1$
-
     private static final String TEST_STRINGS = "Asserion.test_strings"; // $NON-NLS-1$
-
     private static final String TEST_TYPE = "Assertion.test_type"; // $NON-NLS-1$
+    private static final String CUSTOM_MESSAGE = "Assertion.custom_message"; // $NON-NLS-1$
 
     /**
      * Mask values for TEST_TYPE 
      * they are mutually exclusive
      */
     private static final int MATCH = 1; // 1 << 0; // NOSONAR We want this comment
-
     private static final int CONTAINS = 1 << 1;
-
     private static final int NOT = 1 << 2;
-
     private static final int EQUALS = 1 << 3;
-
     private static final int SUBSTRING = 1 << 4;
-
     private static final int OR = 1 << 5;
 
     // Mask should contain all types (but not NOT nor OR)
@@ -152,6 +139,14 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
         setTestField(REQUEST_DATA);
     }
 
+    public void setCustomFailureMessage(String customFailureMessage) {
+        setProperty(CUSTOM_MESSAGE, customFailureMessage);
+    }
+    
+    public String getCustomFailureMessage() {
+        return getPropertyAsString(CUSTOM_MESSAGE);
+    }
+    
     public boolean isTestFieldURL(){
         return SAMPLE_URL.equals(getTestField());
     }
@@ -189,7 +184,7 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
     }
 
     private void setTestTypeMasked(int testType) {
-        int value = getTestType() & ~(TYPE_MASK) | testType;
+        int value = getTestType() & ~TYPE_MASK | testType;
         setProperty(new IntegerProperty(TEST_TYPE, value));
     }
 
@@ -289,8 +284,7 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
     /**
      * Make sure the response satisfies the specified assertion requirements.
      *
-     * @param response
-     *            an instance of SampleResult
+     * @param response an instance of SampleResult
      * @return an instance of AssertionResult
      */
     private AssertionResult evaluateResponse(SampleResult response) {
@@ -347,7 +341,6 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
             return result.setResultForNull();
         }
 
-        boolean pass = true;
         boolean hasTrue = false;
         ArrayList<String> allCheckMessage = new ArrayList<>();
         try {
@@ -369,7 +362,7 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
                 } else {
                     found = localMatcher.matches(toCheck, pattern);
                 }
-                pass = notTest ? !found : found;
+                boolean pass = notTest ? !found : found;
                 if (orTest) {
                     if (!pass) {
                         log.debug("Failed: {}", stringPattern);
@@ -382,7 +375,12 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
                     if (!pass) {
                         log.debug("Failed: {}", stringPattern);
                         result.setFailure(true);
-                        result.setFailureMessage(getFailText(stringPattern,toCheck));
+                        String customMsg = getCustomFailureMessage();
+                        if(StringUtils.isEmpty(customMsg)) {
+                            result.setFailureMessage(getFailText(stringPattern,toCheck));
+                        } else {
+                            result.setFailureMessage(customMsg);
+                        }
                         break;
                     }
                     log.debug("Passed: {}", stringPattern);
@@ -394,7 +392,12 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
                     errorMsg.append(tmp).append('\t');
                 }
                 result.setFailure(true);
-                result.setFailureMessage(errorMsg.toString());   
+                String customMsg = getCustomFailureMessage();
+                if(StringUtils.isEmpty(customMsg)) {
+                    result.setFailureMessage(errorMsg.toString());
+                } else {
+                    result.setFailureMessage(customMsg);
+                }
             }
         } catch (MalformedCachePatternException e) {
             result.setError(true);
@@ -473,9 +476,7 @@ public class ResponseAssertion extends AbstractScopedAssertion implements Serial
         return sb.toString();
     }
 
-
-    private static String trunc(final boolean right, final String str)
-    {
+    private static String trunc(final boolean right, final String str) {
         if (str.length() <= EQUALS_SECTION_DIFF_LEN) {
             return str;
         } else if (right) {

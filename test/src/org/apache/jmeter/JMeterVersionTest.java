@@ -158,8 +158,8 @@ public class JMeterVersionTest extends JMeterTestCase {
                     jar=jar.replace("-jdk15on","");
                 } else if (jar.equals("commons-jexl") && version.startsWith("2")) { // special handling
                     jar = "commons-jexl2";
-                } else if (jar.equals("spock-1.0-groovy")) { // special handling
-                    jar = "spock";
+                } else if (jar.equals("spock-core-1.0-groovy")) { // special handling
+                    jar = "spock-core";
                     version = "1.0-groovy-2.4";
                 } else {
                     String tmp = JAR_TO_BUILD_PROP.get(jar);
@@ -168,9 +168,12 @@ public class JMeterVersionTest extends JMeterTestCase {
                     }
                 }
                 String expected = versions.get(jar);
-                if(expected == null) {
-                    System.err.println("Didn't find version for jar name extracted by regexp, jar name extracted:"+jar+", version extracted:"+version+", current line:"+line);
-                    fail("Didn't find version for jar name extracted by regexp, jar name extracted:"+jar+", version extracted:"+version+", current line:"+line);
+                if (expected == null) {
+                    final String message =
+                            "Didn't find version for jar name extracted by regexp, jar name extracted:"
+                                    + jar + ", version extracted:" + version + ", current line:" + line;
+                    System.err.println(message);
+                    fail(message);
                 }
                 // Process ${xxx.version} references
                 final Matcher mp = versionPat.matcher(expected);

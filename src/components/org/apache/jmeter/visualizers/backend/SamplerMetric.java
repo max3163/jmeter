@@ -57,7 +57,7 @@ public class SamplerMetric {
     /**
      * Timeboxed percentiles don't makes sense
      */
-    private DescriptiveStatistics pctResponseStats = new DescriptiveStatistics(SLIDING_WINDOW_SIZE);
+    private DescriptiveStatistics pctResponseStats = new DescriptiveStatistics(LARGE_SLIDING_WINDOW_SIZE);
     private int successes;
     private int failures;
     private int hits;
