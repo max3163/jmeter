@@ -28,8 +28,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -70,6 +72,8 @@ public class FileServer {
     private static final String BASE_PREFIX = 
         JMeterUtils.getPropDefault("jmeter.save.saveservice.base_prefix", // $NON-NLS-1$
                 BASE_PREFIX_DEFAULT);
+
+    private static final int DEFAULT_CHAR_BUFFER_SIZE = 8192;
 
     private File base;
 
@@ -323,7 +327,122 @@ public class FileServer {
     public String readLine(String filename, boolean recycle) throws IOException {
         return readLine(filename, recycle, false);
     }
-   /**
+
+    /**
+     * Get a random line of the named file
+     *
+     * @param filename the filename or alias that was used to reserve the file
+     * @param ignoreFirstLine - Ignore first line
+     * @return String containing the next line in the file
+     * @throws IOException when reading of the file fails, or the file was not reserved properly
+     */
+    public synchronized String readRandomLine(String filename, boolean ignoreFirstLine) throws IOException {
+        FileEntry fileEntry = files.get(filename);
+        if (fileEntry != null) {
+            if (fileEntry.randomOutputObject == null) {
+                fileEntry.randomOutputObject = new RandomAccessFile(fileEntry.file, "r");
+            }
+            RandomAccessFile raf = (RandomAccessFile) fileEntry.randomOutputObject;
+            long size = raf.length();
+            long randomPosition = ThreadLocalRandom.current().nextLong(size);
+            StringBuffer line = new StringBuffer();
+            if (randomPosition == 0) {
+                if (ignoreFirstLine) {
+                    readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding));
+                }
+                line.append(readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding)));
+            } else {
+                byte[] buffer = new byte[DEFAULT_CHAR_BUFFER_SIZE];
+                String startLine;
+                long position = randomPosition;
+                int lenght;
+                int cursor;
+                // read until the start of the line
+                for (;;) {
+                    // seek back
+                    position -= (position - DEFAULT_CHAR_BUFFER_SIZE > 0) ? DEFAULT_CHAR_BUFFER_SIZE : position;
+                    lenght = (position == 0) ? (int) randomPosition : DEFAULT_CHAR_BUFFER_SIZE;
+                    raf.seek(position);
+                    // read buffer
+                    int count = raf.read(buffer, 0, lenght);
+                    boolean eol = false;
+                    // Find EOF line char
+                    findStartLineLoop: for (cursor = count - 1; (cursor > 0); cursor--) {
+                        if (buffer[cursor] == '\n' || buffer[cursor] == '\r') {
+                            eol = true;
+                            cursor++;
+                            break findStartLineLoop;
+                        }
+                    }
+                    if (eol || cursor == 0) {
+                        startLine = new String(buffer, cursor, count - cursor, fileEntry.charSetEncoding);
+                        line.append(startLine);
+                        break;
+                    } else {
+                        position -= count;
+                    }
+
+                }
+                // seek to the random position to read to the end of the line
+                raf.seek(randomPosition);
+                if (cursor <= 0 && ignoreFirstLine) {
+                    readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding));
+                    // Clear the start of the first line 
+                    line.setLength(0);
+                }
+                line.append(readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding)));
+            }
+            log.debug("Read:{}", line);
+            return line.toString();
+        }
+        throw new IOException("File never reserved: " + filename);
+    }
+
+    private String readToEndLine(RandomAccessFile raf, Charset charset) throws IOException {
+
+        StringBuffer s = new StringBuffer();
+        long pos = raf.getFilePointer();
+        byte[] buffer = new byte[DEFAULT_CHAR_BUFFER_SIZE];
+        for (;;) {
+            int nChars = raf.read(buffer);
+            if (nChars == -1) {
+                return s.toString();
+            }
+            boolean eol = false;
+            int cursor = 0;
+            int start = 0;
+            int end = 0;
+            if (buffer[cursor] == '\n') {
+                start = 1;
+            }
+            charLoop: for (cursor = start; cursor < nChars; cursor++) {
+                int c = buffer[cursor];
+                if ((c == '\n') || (c == '\r')) {
+                    eol = true;
+                    end = cursor;
+                    break charLoop;
+                }
+            }
+            // Check for LF too ( for Windows platform )
+            if (cursor != buffer.length && buffer[cursor + 1] == '\n') {
+                cursor++;
+            }
+            String str;
+            if (eol) {
+                str = new String(buffer, start, end, charset);
+                pos += cursor;
+                raf.seek(++pos);
+                s.append(str);
+                return s.toString();
+            } else {
+                pos += nChars;
+                str = new String(buffer, charset);
+                s.append(str);
+            }
+        }
+    }
+
+    /**
      * Get the next line of the named file
      *
      * @param filename the filename or alias that was used to reserve the file
@@ -484,7 +603,9 @@ public class FileServer {
         if (fileEntry != null && fileEntry.inputOutputObject != null) {
             log.info("Close: {}", name);
             fileEntry.inputOutputObject.close();
+            fileEntry.randomOutputObject.close();
             fileEntry.inputOutputObject = null;
+            fileEntry.inputOutputObject.close();
         }
     }
 
@@ -536,11 +657,13 @@ public class FileServer {
         private Throwable exception;
         private final File file;
         private Closeable inputOutputObject; 
+        private Closeable randomOutputObject;
         private final String charSetEncoding;
 
         FileEntry(File f, Closeable o, String e) {
             file = f;
             inputOutputObject = o;
+            randomOutputObject = o;
             charSetEncoding = e;
         }
     }

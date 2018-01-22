@@ -174,6 +174,9 @@ public class CSVDataSet extends ConfigTestElement
                 case CSVDataSetBeanInfo.SHARE_THREAD:
                     alias = fileName+"@"+System.identityHashCode(context.getThread());
                     break;
+                case CSVDataSetBeanInfo.READ_RANDOMLY:
+                    alias = fileName;
+                    break;
                 default:
                     alias = fileName+"@"+mode; // user-specified key
                     break;
@@ -199,11 +202,19 @@ public class CSVDataSet extends ConfigTestElement
         String[] lineValues = {};
         try {
             if (getQuotedData()) {
-                lineValues = server.getParsedLine(alias, recycle, 
+                if ( CSVDataSetBeanInfo.getShareModeAsInt(getShareMode()) == CSVDataSetBeanInfo.READ_RANDOMLY )  {
+                    lineValues = CSVSaveService.csvSplitString(server.readRandomLine(alias,  firstLineIsNames || ignoreFirstLine), delim.charAt(0));
+                } else {
+                    lineValues = server.getParsedLine(alias, recycle, 
                         firstLineIsNames || ignoreFirstLine, delim.charAt(0));
+                }
             } else {
-                String line = server.readLine(alias, recycle, 
-                        firstLineIsNames || ignoreFirstLine);
+                String line;
+                if ( CSVDataSetBeanInfo.getShareModeAsInt(getShareMode()) == CSVDataSetBeanInfo.READ_RANDOMLY )  {
+                    line = server.readRandomLine(alias,  firstLineIsNames || ignoreFirstLine);
+                } else {
+                    line = server.readLine(alias, recycle, firstLineIsNames || ignoreFirstLine);
+                }
                 lineValues = JOrphanUtils.split(line, delim, false);
             }
             for (int a = 0; a < vars.length && a < lineValues.length; a++) {

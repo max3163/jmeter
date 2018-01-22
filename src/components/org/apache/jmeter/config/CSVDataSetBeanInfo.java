@@ -38,18 +38,20 @@ public class CSVDataSetBeanInfo extends BeanInfoSupport {
     private static final String STOPTHREAD = "stopThread";           //$NON-NLS-1$
     private static final String QUOTED_DATA = "quotedData";          //$NON-NLS-1$
     private static final String SHAREMODE = "shareMode";             //$NON-NLS-1$
-
+        
     // Access needed from CSVDataSet
     private static final String[] SHARE_TAGS = new String[3];
     static final int SHARE_ALL    = 0;
     static final int SHARE_GROUP  = 1;
     static final int SHARE_THREAD = 2;
+    static final int READ_RANDOMLY = 3;
 
     // Store the resource keys
     static {
         SHARE_TAGS[SHARE_ALL]    = "shareMode.all"; //$NON-NLS-1$
         SHARE_TAGS[SHARE_GROUP]  = "shareMode.group"; //$NON-NLS-1$
         SHARE_TAGS[SHARE_THREAD] = "shareMode.thread"; //$NON-NLS-1$        
+        SHARE_TAGS[SHARE_THREAD] = "shareMode.readRandomly"; //$NON-NLS-1$        
     }
 
     public CSVDataSetBeanInfo() {
@@ -88,7 +90,7 @@ public class CSVDataSetBeanInfo extends BeanInfoSupport {
         p = property(QUOTED_DATA);
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
         p.setValue(DEFAULT, Boolean.FALSE);
-
+        
         p = property(RECYCLE);
         p.setValue(NOT_UNDEFINED, Boolean.TRUE);
         p.setValue(DEFAULT, Boolean.TRUE);
