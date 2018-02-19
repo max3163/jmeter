@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -45,16 +44,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class provides thread-safe access to files, and to
- * provide some simplifying assumptions about where to find files and how to
- * name them. For instance, putting supporting files in the same directory as
- * the saved test plan file allows users to refer to the file with just it's
- * name - this FileServer class will find the file without a problem.
- * Eventually, I want all in-test file access to be done through here, with the
- * goal of packaging up entire test plans as a directory structure that can be
- * sent via rmi to remote servers (currently, one must make sure the remote
- * server has all support files in a relative-same location) and to package up
- * test plans to execute on unknown boxes that only have Java installed.
+ * This class provides thread-safe access to files, and to provide some
+ * simplifying assumptions about where to find files and how to name them. For
+ * instance, putting supporting files in the same directory as the saved test
+ * plan file allows users to refer to the file with just it's name - this
+ * FileServer class will find the file without a problem. Eventually, I want all
+ * in-test file access to be done through here, with the goal of packaging up
+ * entire test plans as a directory structure that can be sent via rmi to remote
+ * servers (currently, one must make sure the remote server has all support
+ * files in a relative-same location) and to package up test plans to execute on
+ * unknown boxes that only have Java installed.
  */
 public class FileServer {
 
@@ -69,11 +68,8 @@ public class FileServer {
     /** Default base prefix: {@value} */
     private static final String BASE_PREFIX_DEFAULT = "~/"; // $NON-NLS-1$
 
-    private static final String BASE_PREFIX = 
-        JMeterUtils.getPropDefault("jmeter.save.saveservice.base_prefix", // $NON-NLS-1$
-                BASE_PREFIX_DEFAULT);
-
-    private static final int DEFAULT_CHAR_BUFFER_SIZE = 8192;
+    private static final String BASE_PREFIX = JMeterUtils.getPropDefault("jmeter.save.saveservice.base_prefix", // $NON-NLS-1$
+            BASE_PREFIX_DEFAULT);
 
     private File base;
 
@@ -107,12 +103,15 @@ public class FileServer {
     }
 
     /**
-     * Sets the current base directory for relative file names from the provided path.
-     * If the path does not refer to an existing directory, then its parent is used.
-     * Normally the provided path is a file, so using the parent directory is appropriate.
+     * Sets the current base directory for relative file names from the provided
+     * path. If the path does not refer to an existing directory, then its
+     * parent is used. Normally the provided path is a file, so using the parent
+     * directory is appropriate.
      * 
-     * @param basedir the path to set, or {@code null} if the GUI is being cleared
-     * @throws IllegalStateException if files are still open
+     * @param basedir
+     *            the path to set, or {@code null} if the GUI is being cleared
+     * @throws IllegalStateException
+     *             if files are still open
      */
     public synchronized void setBasedir(String basedir) {
         checkForOpenFiles(); // TODO should this be called if basedir == null?
@@ -127,16 +126,19 @@ public class FileServer {
     }
 
     /**
-     * Sets the current base directory for relative file names from the provided script file.
-     * The parameter is assumed to be the path to a JMX file, so the base directory is derived
-     * from its parent.
+     * Sets the current base directory for relative file names from the provided
+     * script file. The parameter is assumed to be the path to a JMX file, so
+     * the base directory is derived from its parent.
      * 
-     * @param scriptPath the path of the script file; must be not be {@code null}
-     * @throws IllegalStateException if files are still open
-     * @throws IllegalArgumentException if scriptPath parameter is null
+     * @param scriptPath
+     *            the path of the script file; must be not be {@code null}
+     * @throws IllegalStateException
+     *             if files are still open
+     * @throws IllegalArgumentException
+     *             if scriptPath parameter is null
      */
     public synchronized void setBaseForScript(File scriptPath) {
-        if (scriptPath == null){
+        if (scriptPath == null) {
             throw new IllegalArgumentException("scriptPath must not be null");
         }
         setScriptName(scriptPath.getName());
@@ -147,9 +149,12 @@ public class FileServer {
     /**
      * Sets the current base directory for relative file names.
      * 
-     * @param jmxBase the path of the script file base directory, cannot be null
-     * @throws IllegalStateException if files are still open
-     * @throws IllegalArgumentException if {@code basepath} is null
+     * @param jmxBase
+     *            the path of the script file base directory, cannot be null
+     * @throws IllegalStateException
+     *             if files are still open
+     * @throws IllegalArgumentException
+     *             if {@code basepath} is null
      */
     public synchronized void setBase(File jmxBase) {
         if (jmxBase == null) {
@@ -166,7 +171,8 @@ public class FileServer {
      * Caller must ensure that access to the files map is single-threaded as
      * there is a window between checking the files Map and clearing it.
      * 
-     * @throws IllegalStateException if there are any entries still in use
+     * @throws IllegalStateException
+     *             if there are any entries still in use
      */
     private void checkForOpenFiles() throws IllegalStateException {
         if (filesOpen()) { // checks for entries in use
@@ -179,34 +185,36 @@ public class FileServer {
         return base.getAbsolutePath();
     }
 
-    public static String getDefaultBase(){
+    public static String getDefaultBase() {
         return DEFAULT_BASE;
     }
 
     /**
-     * Calculates the relative path from {@link #DEFAULT_BASE} to the current base,
-     * which must be the same as or a child of the default.
+     * Calculates the relative path from {@link #DEFAULT_BASE} to the current
+     * base, which must be the same as or a child of the default.
      * 
-     * @return the relative path, or {@code "."} if the path cannot be determined
+     * @return the relative path, or {@code "."} if the path cannot be
+     *         determined
      */
     public synchronized File getBaseDirRelative() {
-        // Must first convert to absolute path names to ensure parents are available
+        // Must first convert to absolute path names to ensure parents are
+        // available
         File parent = new File(DEFAULT_BASE).getAbsoluteFile();
         File f = base.getAbsoluteFile();
         ArrayStack l = new ArrayStack();
-        while (f != null) { 
-            if (f.equals(parent)){
-                if (l.isEmpty()){
+        while (f != null) {
+            if (f.equals(parent)) {
+                if (l.isEmpty()) {
                     break;
                 }
                 File rel = new File((String) l.pop());
-                while(!l.isEmpty()) {
+                while (!l.isEmpty()) {
                     rel = new File(rel, (String) l.pop());
                 }
                 return rel;
             }
             l.push(f.getName());
-            f = f.getParentFile(); 
+            f = f.getParentFile();
         }
         return new File(".");
     }
@@ -215,18 +223,21 @@ public class FileServer {
      * Creates an association between a filename and a File inputOutputObject,
      * and stores it for later use - unless it is already stored.
      *
-     * @param filename - relative (to base) or absolute file name (must not be null)
+     * @param filename
+     *            - relative (to base) or absolute file name (must not be null)
      */
     public void reserveFile(String filename) {
-        reserveFile(filename,null);
+        reserveFile(filename, null);
     }
 
     /**
      * Creates an association between a filename and a File inputOutputObject,
      * and stores it for later use - unless it is already stored.
      *
-     * @param filename - relative (to base) or absolute file name (must not be null)
-     * @param charsetName - the character set encoding to use for the file (may be null)
+     * @param filename
+     *            - relative (to base) or absolute file name (must not be null)
+     * @param charsetName
+     *            - the character set encoding to use for the file (may be null)
      */
     public void reserveFile(String filename, String charsetName) {
         reserveFile(filename, charsetName, filename, false);
@@ -236,9 +247,12 @@ public class FileServer {
      * Creates an association between a filename and a File inputOutputObject,
      * and stores it for later use - unless it is already stored.
      *
-     * @param filename - relative (to base) or absolute file name (must not be null)
-     * @param charsetName - the character set encoding to use for the file (may be null)
-     * @param alias - the name to be used to access the object (must not be null)
+     * @param filename
+     *            - relative (to base) or absolute file name (must not be null)
+     * @param charsetName
+     *            - the character set encoding to use for the file (may be null)
+     * @param alias
+     *            - the name to be used to access the object (must not be null)
      */
     public void reserveFile(String filename, String charsetName, String alias) {
         reserveFile(filename, charsetName, alias, false);
@@ -248,24 +262,30 @@ public class FileServer {
      * Creates an association between a filename and a File inputOutputObject,
      * and stores it for later use - unless it is already stored.
      *
-     * @param filename - relative (to base) or absolute file name (must not be null or empty)
-     * @param charsetName - the character set encoding to use for the file (may be null)
-     * @param alias - the name to be used to access the object (must not be null)
-     * @param hasHeader true if the file has a header line describing the contents
+     * @param filename
+     *            - relative (to base) or absolute file name (must not be null
+     *            or empty)
+     * @param charsetName
+     *            - the character set encoding to use for the file (may be null)
+     * @param alias
+     *            - the name to be used to access the object (must not be null)
+     * @param hasHeader
+     *            true if the file has a header line describing the contents
      * @return the header line; may be null
-     * @throws IllegalArgumentException if header could not be read or filename is null or empty
+     * @throws IllegalArgumentException
+     *             if header could not be read or filename is null or empty
      */
     public synchronized String reserveFile(String filename, String charsetName, String alias, boolean hasHeader) {
-        if (filename == null || filename.isEmpty()){
+        if (filename == null || filename.isEmpty()) {
             throw new IllegalArgumentException("Filename must not be null or empty");
         }
-        if (alias == null){
+        if (alias == null) {
             throw new IllegalArgumentException("Alias must not be null");
         }
         FileEntry fileEntry = files.get(alias);
         if (fileEntry == null) {
             fileEntry = new FileEntry(resolveFileFromPath(filename), null, charsetName);
-            if (filename.equals(alias)){
+            if (filename.equals(alias)) {
                 log.info("Stored: {}", filename);
             } else {
                 log.info("Stored: {} Alias: {}", filename, alias);
@@ -290,10 +310,12 @@ public class FileServer {
     }
 
     /**
-     * Resolves file name into {@link File} instance.
-     * When filename is not absolute and not found from current working dir,
-     * it tries to find it under current base directory
-     * @param filename original file name
+     * Resolves file name into {@link File} instance. When filename is not
+     * absolute and not found from current working dir, it tries to find it
+     * under current base directory
+     * 
+     * @param filename
+     *            original file name
      * @return {@link File} instance
      */
     private File resolveFileFromPath(String filename) {
@@ -308,153 +330,88 @@ public class FileServer {
     /**
      * Get the next line of the named file, recycle by default.
      *
-     * @param filename the filename or alias that was used to reserve the file
+     * @param filename
+     *            the filename or alias that was used to reserve the file
      * @return String containing the next line in the file
-     * @throws IOException when reading of the file fails, or the file was not reserved properly
+     * @throws IOException
+     *             when reading of the file fails, or the file was not reserved
+     *             properly
      */
     public String readLine(String filename) throws IOException {
-      return readLine(filename, true);
+        return readLine(filename, true);
     }
 
     /**
      * Get the next line of the named file, first line is name to false
      *
-     * @param filename the filename or alias that was used to reserve the file
-     * @param recycle - should file be restarted at EOF?
-     * @return String containing the next line in the file (null if EOF reached and not recycle)
-     * @throws IOException when reading of the file fails, or the file was not reserved properly
+     * @param filename
+     *            the filename or alias that was used to reserve the file
+     * @param recycle
+     *            - should file be restarted at EOF?
+     * @return String containing the next line in the file (null if EOF reached
+     *         and not recycle)
+     * @throws IOException
+     *             when reading of the file fails, or the file was not reserved
+     *             properly
      */
     public String readLine(String filename, boolean recycle) throws IOException {
         return readLine(filename, recycle, false);
+    }
+    
+    
+    protected synchronized FileEntry lookupFile(String filename) throws IOException {
+        FileEntry fileEntry = files.get(filename);
+        if (fileEntry != null) {
+            return fileEntry;
+        }
+        throw new IOException("File never reserved: " + filename);
     }
 
     /**
      * Get a random line of the named file
      *
-     * @param filename the filename or alias that was used to reserve the file
-     * @param ignoreFirstLine - Ignore first line
+     * @param filename
+     *            the filename or alias that was used to reserve the file
+     * @param ignoreFirstLine
+     *            - Ignore first line
      * @return String containing the next line in the file
-     * @throws IOException when reading of the file fails, or the file was not reserved properly
+     * @throws IOException
+     *             when reading of the file fails, or the file was not reserved
+     *             properly
      */
-    public synchronized String readRandomLine(String filename, boolean ignoreFirstLine) throws IOException {
-        FileEntry fileEntry = files.get(filename);
-        if (fileEntry != null) {
+    public String readRandomLine(String filename, boolean ignoreFirstLine) throws IOException {
+        FileEntry fileEntry = lookupFile(filename);
+        synchronized (fileEntry) {
             if (fileEntry.randomOutputObject == null) {
-                fileEntry.randomOutputObject = new RandomAccessFile(fileEntry.file, "r");
+                fileEntry.randomOutputObject = new FastRandomAccessFile(fileEntry.file, Charset.forName(fileEntry.charSetEncoding));
             }
-            RandomAccessFile raf = (RandomAccessFile) fileEntry.randomOutputObject;
-            long size = raf.length();
+            FastRandomAccessFile fraf = (FastRandomAccessFile) fileEntry.randomOutputObject;
+            long size = fraf.length();
             long randomPosition = ThreadLocalRandom.current().nextLong(size);
-            StringBuffer line = new StringBuffer();
-            if (randomPosition == 0) {
-                if (ignoreFirstLine) {
-                    readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding));
-                }
-                line.append(readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding)));
-            } else {
-                byte[] buffer = new byte[DEFAULT_CHAR_BUFFER_SIZE];
-                String startLine;
-                long position = randomPosition;
-                int lenght;
-                int cursor;
-                // read until the start of the line
-                for (;;) {
-                    // seek back
-                    position -= (position - DEFAULT_CHAR_BUFFER_SIZE > 0) ? DEFAULT_CHAR_BUFFER_SIZE : position;
-                    lenght = (position == 0) ? (int) randomPosition : DEFAULT_CHAR_BUFFER_SIZE;
-                    raf.seek(position);
-                    // read buffer
-                    int count = raf.read(buffer, 0, lenght);
-                    boolean eol = false;
-                    // Find EOF line char
-                    findStartLineLoop: for (cursor = count - 1; (cursor > 0); cursor--) {
-                        if (buffer[cursor] == '\n' || buffer[cursor] == '\r') {
-                            eol = true;
-                            cursor++;
-                            break findStartLineLoop;
-                        }
-                    }
-                    if (eol || cursor == 0) {
-                        startLine = new String(buffer, cursor, count - cursor, fileEntry.charSetEncoding);
-                        line.append(startLine);
-                        break;
-                    } else {
-                        position -= count;
-                    }
-
-                }
-                // seek to the random position to read to the end of the line
-                raf.seek(randomPosition);
-                if (cursor <= 0 && ignoreFirstLine) {
-                    readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding));
-                    // Clear the start of the first line 
-                    line.setLength(0);
-                }
-                line.append(readToEndLine(raf, Charset.forName(fileEntry.charSetEncoding)));
-            }
+            String line = fraf.readRandomLine(randomPosition, ignoreFirstLine);
             log.debug("Read:{}", line);
-            return line.toString();
-        }
-        throw new IOException("File never reserved: " + filename);
-    }
-
-    private String readToEndLine(RandomAccessFile raf, Charset charset) throws IOException {
-
-        StringBuffer s = new StringBuffer();
-        long pos = raf.getFilePointer();
-        byte[] buffer = new byte[DEFAULT_CHAR_BUFFER_SIZE];
-        for (;;) {
-            int nChars = raf.read(buffer);
-            if (nChars == -1) {
-                return s.toString();
-            }
-            boolean eol = false;
-            int cursor = 0;
-            int start = 0;
-            int end = 0;
-            if (buffer[cursor] == '\n') {
-                start = 1;
-            }
-            charLoop: for (cursor = start; cursor < nChars; cursor++) {
-                int c = buffer[cursor];
-                if ((c == '\n') || (c == '\r')) {
-                    eol = true;
-                    end = cursor;
-                    break charLoop;
-                }
-            }
-            // Check for LF too ( for Windows platform )
-            if (cursor != buffer.length && buffer[cursor + 1] == '\n') {
-                cursor++;
-            }
-            String str;
-            if (eol) {
-                str = new String(buffer, start, end, charset);
-                pos += cursor;
-                raf.seek(++pos);
-                s.append(str);
-                return s.toString();
-            } else {
-                pos += nChars;
-                str = new String(buffer, charset);
-                s.append(str);
-            }
+            return line;
         }
     }
 
     /**
      * Get the next line of the named file
      *
-     * @param filename the filename or alias that was used to reserve the file
-     * @param recycle - should file be restarted at EOF?
-     * @param ignoreFirstLine - Ignore first line
-     * @return String containing the next line in the file (null if EOF reached and not recycle)
-     * @throws IOException when reading of the file fails, or the file was not reserved properly
+     * @param filename
+     *            the filename or alias that was used to reserve the file
+     * @param recycle
+     *            - should file be restarted at EOF?
+     * @param ignoreFirstLine
+     *            - Ignore first line
+     * @return String containing the next line in the file (null if EOF reached
+     *         and not recycle)
+     * @throws IOException
+     *             when reading of the file fails, or the file was not reserved
+     *             properly
      */
-    public synchronized String readLine(String filename, boolean recycle, 
-            boolean ignoreFirstLine) throws IOException {
-        FileEntry fileEntry = files.get(filename);
-        if (fileEntry != null) {
+    public String readLine(String filename, boolean recycle, boolean ignoreFirstLine) throws IOException {
+        FileEntry fileEntry = lookupFile(filename);
+        synchronized (fileEntry) {
             if (fileEntry.inputOutputObject == null) {
                 fileEntry.inputOutputObject = createBufferedReader(fileEntry);
             } else if (!(fileEntry.inputOutputObject instanceof Reader)) {
@@ -468,26 +425,32 @@ public class FileServer {
                 fileEntry.inputOutputObject = reader;
                 if (ignoreFirstLine) {
                     // read first line and forget
-                    reader.readLine();//NOSONAR
+                    reader.readLine();// NOSONAR
                 }
                 line = reader.readLine();
             }
             log.debug("Read:{}", line);
             return line;
         }
-        throw new IOException("File never reserved: "+filename);
     }
 
     /**
      * 
-     * @param alias the file name or alias
-     * @param recycle whether the file should be re-started on EOF
-     * @param ignoreFirstLine whether the file contains a file header which will be ignored
-     * @param delim the delimiter to use for parsing
+     * @param alias
+     *            the file name or alias
+     * @param recycle
+     *            whether the file should be re-started on EOF
+     * @param ignoreFirstLine
+     *            whether the file contains a file header which will be ignored
+     * @param delim
+     *            the delimiter to use for parsing
      * @return the parsed line, will be empty if the file is at EOF
-     * @throws IOException when reading of the aliased file fails, or the file was not reserved properly
+     * @throws IOException
+     *             when reading of the aliased file fails, or the file was not
+     *             reserved properly
      */
-    public synchronized String[] getParsedLine(String alias, boolean recycle, boolean ignoreFirstLine, char delim) throws IOException {
+    public synchronized String[] getParsedLine(String alias, boolean recycle, boolean ignoreFirstLine, char delim)
+            throws IOException {
         BufferedReader reader = getReader(alias, recycle, ignoreFirstLine);
         return CSVSaveService.csvReadFile(reader, delim);
     }
@@ -496,9 +459,12 @@ public class FileServer {
      * Return BufferedReader handling close if EOF reached and recycle is true
      * and ignoring first line if ignoreFirstLine is true
      *
-     * @param alias           String alias
-     * @param recycle         Recycle at eof
-     * @param ignoreFirstLine Ignore first line
+     * @param alias
+     *            String alias
+     * @param recycle
+     *            Recycle at eof
+     * @param ignoreFirstLine
+     *            Ignore first line
      * @return {@link BufferedReader}
      */
     private BufferedReader getReader(String alias, boolean recycle, boolean ignoreFirstLine) throws IOException {
@@ -510,7 +476,7 @@ public class FileServer {
                 fileEntry.inputOutputObject = reader;
                 if (ignoreFirstLine) {
                     // read first line and forget
-                    reader.readLine(); //NOSONAR
+                    reader.readLine(); // NOSONAR
                 }
             } else if (!(fileEntry.inputOutputObject instanceof Reader)) {
                 throw new IOException("File " + alias + " already in use");
@@ -525,7 +491,7 @@ public class FileServer {
                         fileEntry.inputOutputObject = reader;
                         if (ignoreFirstLine) {
                             // read first line and forget
-                            reader.readLine(); //NOSONAR
+                            reader.readLine(); // NOSONAR
                         }
                     } else { // OK, we still have some data, restore it
                         reader.reset();
@@ -534,19 +500,20 @@ public class FileServer {
             }
             return reader;
         } else {
-            throw new IOException("File never reserved: "+alias);
+            throw new IOException("File never reserved: " + alias);
         }
     }
 
     private BufferedReader createBufferedReader(FileEntry fileEntry) throws IOException {
         if (!fileEntry.file.canRead() || !fileEntry.file.isFile()) {
-            throw new IllegalArgumentException("File "+ fileEntry.file.getName()+ " must exist and be readable");
+            throw new IllegalArgumentException("File " + fileEntry.file.getName() + " must exist and be readable");
         }
         FileInputStream fis = new FileInputStream(fileEntry.file);
         InputStreamReader isr = null;
-        // If file encoding is specified, read using that encoding, otherwise use default platform encoding
+        // If file encoding is specified, read using that encoding, otherwise
+        // use default platform encoding
         String charsetName = fileEntry.charSetEncoding;
-        if(!JOrphanUtils.isBlank(charsetName)) {
+        if (!JOrphanUtils.isBlank(charsetName)) {
             isr = new InputStreamReader(fis, charsetName);
         } else {
             isr = new InputStreamReader(fis);
@@ -566,16 +533,17 @@ public class FileServer {
             log.debug("Write:{}", value);
             writer.write(value);
         } else {
-            throw new IOException("File never reserved: "+filename);
+            throw new IOException("File never reserved: " + filename);
         }
     }
 
     private BufferedWriter createBufferedWriter(FileEntry fileEntry) throws IOException {
         FileOutputStream fos = new FileOutputStream(fileEntry.file);
         OutputStreamWriter osw;
-        // If file encoding is specified, write using that encoding, otherwise use default platform encoding
+        // If file encoding is specified, write using that encoding, otherwise
+        // use default platform encoding
         String charsetName = fileEntry.charSetEncoding;
-        if(!JOrphanUtils.isBlank(charsetName)) {
+        if (!JOrphanUtils.isBlank(charsetName)) {
             osw = new OutputStreamWriter(fos, charsetName);
         } else {
             osw = new OutputStreamWriter(fos);
@@ -585,14 +553,16 @@ public class FileServer {
 
     public synchronized void closeFiles() throws IOException {
         for (Map.Entry<String, FileEntry> me : files.entrySet()) {
-            closeFile(me.getKey(),me.getValue() );
+            closeFile(me.getKey(), me.getValue());
         }
         files.clear();
     }
 
     /**
-     * @param name the name or alias of the file to be closed
-     * @throws IOException when closing of the aliased file fails
+     * @param name
+     *            the name or alias of the file to be closed
+     * @throws IOException
+     *             when closing of the aliased file fails
      */
     public synchronized void closeFile(String name) throws IOException {
         FileEntry fileEntry = files.get(name);
@@ -610,21 +580,22 @@ public class FileServer {
     }
 
     boolean filesOpen() { // package access for test code only
-        return files.values().stream()
-                .anyMatch(fileEntry -> fileEntry.inputOutputObject != null);
+        return files.values().stream().anyMatch(fileEntry -> fileEntry.inputOutputObject != null);
     }
 
     /**
      * Method will get a random file in a base directory
      * <p>
-     * TODO hey, not sure this method belongs here.
-     * FileServer is for thread safe File access relative to current test's base directory.
+     * TODO hey, not sure this method belongs here. FileServer is for thread
+     * safe File access relative to current test's base directory.
      *
-     * @param basedir    name of the directory in which the files can be found
-     * @param extensions array of allowed extensions, if <code>null</code> is given,
-     *                   any file be allowed
+     * @param basedir
+     *            name of the directory in which the files can be found
+     * @param extensions
+     *            array of allowed extensions, if <code>null</code> is given,
+     *            any file be allowed
      * @return a random File from the <code>basedir</code> that matches one of
-     * the extensions
+     *         the extensions
      */
     public File getRandomFile(String basedir, String[] extensions) {
         File input = null;
@@ -641,10 +612,11 @@ public class FileServer {
     }
 
     /**
-     * Get {@link File} instance for provided file path,
-     * resolve file location relative to base dir or script dir when needed
+     * Get {@link File} instance for provided file path, resolve file location
+     * relative to base dir or script dir when needed
      *
-     * @param path original path to file, maybe relative
+     * @param path
+     *            original path to file, maybe relative
      * @return {@link File} instance
      */
     public File getResolvedFile(String path) {
@@ -652,11 +624,11 @@ public class FileServer {
         return files.get(path).file;
     }
 
-    private static class FileEntry{
+    private static class FileEntry {
         private String headerLine;
         private Throwable exception;
         private final File file;
-        private Closeable inputOutputObject; 
+        private Closeable inputOutputObject;
         private Closeable randomOutputObject;
         private final String charSetEncoding;
 
@@ -667,7 +639,7 @@ public class FileServer {
             charSetEncoding = e;
         }
     }
-    
+
     /**
      * Resolve a file name that may be relative to the base directory. If the
      * name begins with the value of the JMeter property
@@ -680,9 +652,9 @@ public class FileServer {
      * @return the updated filename
      */
     public static String resolveBaseRelativeName(String relativeName) {
-        if (relativeName.startsWith(BASE_PREFIX)){
+        if (relativeName.startsWith(BASE_PREFIX)) {
             String newName = relativeName.substring(BASE_PREFIX.length());
-            return new File(getFileServer().getBaseDir(),newName).getAbsolutePath();
+            return new File(getFileServer().getBaseDir(), newName).getAbsolutePath();
         }
         return relativeName;
     }
@@ -696,7 +668,8 @@ public class FileServer {
     }
 
     /**
-     * @param scriptName Script name
+     * @param scriptName
+     *            Script name
      * @since 2.6
      */
     public void setScriptName(String scriptName) {

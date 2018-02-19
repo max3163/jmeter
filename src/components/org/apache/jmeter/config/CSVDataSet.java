@@ -166,6 +166,7 @@ public class CSVDataSet extends ConfigTestElement
             int modeInt = CSVDataSetBeanInfo.getShareModeAsInt(mode);
             switch(modeInt){
                 case CSVDataSetBeanInfo.SHARE_ALL:
+                case CSVDataSetBeanInfo.READ_RANDOMLY:
                     alias = fileName;
                     break;
                 case CSVDataSetBeanInfo.SHARE_GROUP:
@@ -173,9 +174,6 @@ public class CSVDataSet extends ConfigTestElement
                     break;
                 case CSVDataSetBeanInfo.SHARE_THREAD:
                     alias = fileName+"@"+System.identityHashCode(context.getThread());
-                    break;
-                case CSVDataSetBeanInfo.READ_RANDOMLY:
-                    alias = fileName;
                     break;
                 default:
                     alias = fileName+"@"+mode; // user-specified key
